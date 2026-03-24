@@ -347,9 +347,12 @@
         <div class="w-full lg:w-1/4" id="productListPanel">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-base font-semibold" id="productListTitle">제품 목록</h2>
-            <button onclick="openProductModal()" class="btn-primary text-xs px-2.5 py-1.5 rounded-lg font-medium">+
-              제품</button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggleCompanySpecPanel()" id="companySpecToggleBtn" class="text-xs px-2 py-1.5 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500 hidden" title="스펙 표시 설정">⚙️</button>
+              <button onclick="openProductModal()" class="btn-primary text-xs px-2.5 py-1.5 rounded-lg font-medium">+ 제품</button>
+            </div>
           </div>
+          <div id="companySpecPanel" class="mb-3 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in"></div>
           <div id="productList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
           <div id="emptyProductMsg" class="text-center py-12 text-dark-400 hidden">
             <div class="text-3xl mb-2">📦</div>
@@ -776,6 +779,19 @@
     function saveCompanyEdit() { const id = document.getElementById('editCompId').value; const n = document.getElementById('editCompName').value.trim(); const c = document.getElementById('editCompCountry').value.trim(); const m = document.getElementById('editCompMemo').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } const comp = getCatCompanies(currentCategory).find(x => x.id === id) || getCompany(id); if (comp) { comp.name = n; comp.country = c; comp.memo = m } save(); closeModal('modalCompanyEdit'); renderCompanyManageList(); renderCompanyTab(); showToast('회사 수정됨') }
     function deleteCompany(id) { const c = getCompany(id); if (!c || !confirm(`"${c.name}" 회사를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; data.companies[currentCategory] = (data.companies[currentCategory] || []).filter(x => x.id !== id); data.products = data.products.filter(p => p.companyId !== id); save(); if (selectedCompanyId === id) { selectedCompanyId = null; selectedProductId = null } renderCompanyManageList(); renderCompanyTab(); renderQuoteBuilder(); showToast('회사 삭제됨') }
 
+    let companySpecDisplay = {};
+    let companySpecPanelOpen = false;
+    function loadCompanySpecDisplay() { try { const r = localStorage.getItem('companySpecDisplay'); if(r) companySpecDisplay = JSON.parse(r); } catch(e){ companySpecDisplay = {}; } }
+    function saveCompanySpecDisplay() { localStorage.setItem('companySpecDisplay', JSON.stringify(companySpecDisplay)); }
+    function getCompanySpecsForCat(cat) { if(!companySpecDisplay[cat]) companySpecDisplay[cat] = []; return companySpecDisplay[cat]; }
+    function toggleCompanySpecPanel() { companySpecPanelOpen = !companySpecPanelOpen; renderProductListForCompany(); }
+    function toggleCompanySpec(cat, specName, checked) {
+      if(!companySpecDisplay[cat]) companySpecDisplay[cat] = [];
+      if(checked) { if(!companySpecDisplay[cat].includes(specName)) companySpecDisplay[cat].push(specName); }
+      else { companySpecDisplay[cat] = companySpecDisplay[cat].filter(s => s !== specName); }
+      saveCompanySpecDisplay(); renderProductListForCompany();
+    }
+
     /* ===================== COMPANY TAB VIEW ===================== */
     function renderCompanyTab() {
       const allCompanies = getCatCompanies(currentCategory);
@@ -797,15 +813,59 @@
     function renderProductListForCompany() {
       const list = document.getElementById('productList');
       const empty = document.getElementById('emptyProductMsg');
-      if (!selectedCompanyId) { list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '회사를 선택하세요'; return }
-      const products = data.products.filter(p => p.companyId === selectedCompanyId && p.category === currentCategory);
+      const panel = document.getElementById('companySpecPanel');
+      const btn = document.getElementById('companySpecToggleBtn');
+      
+      if (!selectedCompanyId) { 
+        list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '회사를 선택하세요'; 
+        if (panel) panel.classList.add('hidden');
+        if (btn) btn.classList.add('hidden');
+        return; 
+      }
+      
       const comp = getCompany(selectedCompanyId);
       document.getElementById('productListTitle').textContent = (comp ? comp.name : '') + ' 제품';
+
+      const catSpecs = data.specs[currentCategory] || [];
+      if (btn && panel) {
+        if (!catSpecs.length) {
+          btn.classList.add('hidden');
+          panel.classList.add('hidden');
+        } else {
+          btn.classList.remove('hidden');
+          if (companySpecPanelOpen) {
+            btn.classList.add('bg-accent', 'text-white');
+            btn.classList.remove('bg-dark-600', 'text-dark-300');
+            const selectedSpecs = getCompanySpecsForCat(currentCategory);
+            panel.innerHTML = catSpecs.map(s => {
+              const isChecked = selectedSpecs.includes(s.name);
+              return `<label class="flex items-center gap-1 bg-dark-600 rounded px-2 py-1 text-xs cursor-pointer hover:bg-dark-500 transition-colors"><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCompanySpec('${escQ(currentCategory)}','${escQ(s.name)}',this.checked)" class="accent-indigo-500"><span>${s.name}</span></label>`;
+            }).join('');
+            panel.classList.remove('hidden');
+          } else {
+            btn.classList.remove('bg-accent', 'text-white');
+            btn.classList.add('bg-dark-600', 'text-dark-300');
+            panel.classList.add('hidden');
+          }
+        }
+      }
+
+      const products = data.products.filter(p => p.companyId === selectedCompanyId && p.category === currentCategory);
       if (!products.length) { list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '등록된 제품이 없습니다'; return }
       empty.classList.add('hidden');
+      
+      const selectedSpecs = getCompanySpecsForCat(currentCategory);
+
       list.innerHTML = products.map(p => {
         const isSel = p.id === selectedProductId;
-        return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectProduct('${p.id}')"><div class="flex justify-between items-start"><div><h3 class="font-medium text-sm">${p.name}</h3><p class="text-xs text-dark-400">${p.price ? formatPrice(p.price, p.currency) : '-'}</p></div><div class="flex gap-1"><button onclick="event.stopPropagation();openProductModal('${p.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="event.stopPropagation();deleteProduct('${p.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div></div>`;
+        const specParts = [];
+        selectedSpecs.forEach(sn => {
+          const val = p.specValues && p.specValues[sn];
+          if (val) specParts.push(val);
+        });
+        const specHtml = specParts.length ? `<p class="text-[11px] text-dark-300 mt-1.5 leading-snug break-words">${specParts.join(' &middot; ')}</p>` : '';
+        
+        return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectProduct('${p.id}')"><div class="flex justify-between items-start"><div class="pr-2"><h3 class="font-medium text-sm">${p.name}</h3><p class="text-xs text-dark-400">${p.price ? formatPrice(p.price, p.currency) : '-'}</p>${specHtml}</div><div class="flex gap-1 shrink-0"><button onclick="event.stopPropagation();openProductModal('${p.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="event.stopPropagation();deleteProduct('${p.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div></div>`;
       }).join('');
     }
     function selectProduct(pid) { selectedProductId = pid; renderProductListForCompany(); renderProductDetail(); if (window.innerWidth < 1024) { const dp = document.getElementById('detailPanel'); dp.style.display = 'block'; dp.style.position = 'fixed'; dp.style.inset = '0'; dp.style.zIndex = '45'; dp.style.background = '#0f172a'; dp.style.overflowY = 'auto'; dp.style.padding = '16px' } }
@@ -1660,7 +1720,7 @@
           initDefaultData();
           save();
         }
-        initModals(); loadQuoteSpecDisplay(); loadCompareSpecDisplay(); loadExchangeRates();
+        initModals(); loadQuoteSpecDisplay(); loadCompareSpecDisplay(); loadCompanySpecDisplay(); loadExchangeRates();
         currentCategory = data.categories[0] || '';
         renderAll();
         _appLoaded = true;
