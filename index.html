@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가격비교 시스템</title>
+  <meta name="description" content="B2B 제품 가격비교 및 견적 관리 시스템">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: { 50: '#f8fafc', 100: '#e2e8f0', 200: '#cbd5e1', 300: '#94a3b8', 400: '#64748b', 500: '#475569', 600: '#334155', 700: '#1e293b', 800: '#0f172a', 900: '#020617' },
+            accent: { DEFAULT: '#6366f1', hover: '#818cf8', light: '#a5b4fc', dim: '#4338ca' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1e293b
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: scale(.95);
+      transition: transform .2s
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: scale(1)
+    }
+
+    .modal-box.wide {
+      max-width: 900px
+    }
+
+    .tab-btn {
+      transition: all .15s
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, .35)
+    }
+
+    .sub-tab-btn {
+      transition: all .15s;
+      border-bottom: 2px solid transparent
+    }
+
+    .sub-tab-btn.active {
+      border-bottom-color: #6366f1;
+      color: #a5b4fc
+    }
+
+    .fade-in {
+      animation: fadeIn .25s ease-out
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      transition: border-color .15s
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, .25)
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      transition: all .15s
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #818cf8, #6366f1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, .4)
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      transition: all .15s
+    }
+
+    .btn-danger:hover {
+      background: #ef4444;
+      transform: translateY(-1px)
+    }
+
+    .btn-secondary {
+      background: #334155;
+      transition: all .15s
+    }
+
+    .btn-secondary:hover {
+      background: #475569
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      transition: all .15s
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      transform: translateY(-1px)
+    }
+
+    .card {
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      transition: all .15s;
+      cursor: pointer
+    }
+
+    .card:hover {
+      border-color: #6366f1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, .15)
+    }
+
+    .card.selected {
+      border-color: #6366f1;
+      background: #1e293b
+    }
+
+    .price-highlight {
+      background: linear-gradient(135deg, rgba(99, 102, 241, .1), rgba(99, 102, 241, .05));
+      border: 1px solid rgba(99, 102, 241, .2)
+    }
+
+    .drag-handle {
+      cursor: grab;
+      user-select: none
+    }
+
+    .drag-handle:active {
+      cursor: grabbing
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    .preview-table th,
+    .preview-table td {
+      border: 1px solid #334155;
+      padding: 6px 10px;
+      text-align: left;
+      font-size: 13px
+    }
+
+    .preview-table th {
+      background: #334155;
+      font-weight: 600
+    }
+
+    .preview-table tr:hover {
+      background: rgba(99, 102, 241, .05)
+    }
+
+    @media(max-width:768px) {
+      .modal-box {
+        width: 95%;
+        padding: 16px;
+        max-height: 90vh
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-dark-800 text-dark-100">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div class="login-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; width: 100%; max-width: 400px;">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center mx-auto mb-3">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        </div>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent">가격비교 시스템</h1>
+        <p class="text-dark-400 text-sm mt-1">로그인하여 시작하세요</p>
+      </div>
+      <div class="space-y-3">
+        <div><label class="text-sm text-dark-300 block mb-1">이메일</label><input id="loginEmail" type="email" placeholder="email@example.com" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;"></div>
+        <div><label class="text-sm text-dark-300 block mb-1">비밀번호</label><input id="loginPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;"></div>
+        <div id="loginError" class="text-red-400 text-xs" style="display:none"></div>
+        <button onclick="doLogin()" id="loginBtn" class="btn-primary w-full py-2 rounded-lg font-medium text-sm">로그인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Screen -->
+  <div id="appWrapper" style="display: none;">
+
+  <!-- Header -->
+  <header class="bg-dark-900/80 backdrop-blur-md border-b border-dark-600 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h1
+          class="text-lg font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent whitespace-nowrap">
+          가격비교</h1>
+      </div>
+      <div class="flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
+        <button onclick="openManageModal('category')"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">⚙️ 카테고리</button>
+        <button onclick="openManageModal('spec')"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📋 스펙</button>
+        <button onclick="openManageModal('company')"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">🏢 회사</button>
+        <button onclick="openExchangeRateModal()"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💱 환율</button>
+        <div class="w-px h-6 bg-dark-600 mx-0.5 hidden md:block"></div>
+        <button onclick="openExcelUploadModal()"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📤 엑셀 업로드</button>
+        <button onclick="openCategoryExportModal()"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📥 내보내기</button>
+        <button onclick="exportJSON()"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💾 백업</button>
+        <button onclick="document.getElementById('importJSON').click()"
+          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📂 복원</button>
+        <input type="file" id="importJSON" accept=".json" class="hidden" onchange="importJSON(event)">
+        <button onclick="doLogout()" class="text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium bg-red-900/50 hover:bg-red-800 text-red-300 ml-2 border border-red-800 transition-colors">🚪 로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category Tabs -->
+  <nav id="categoryTabs" class="bg-dark-900/50 border-b border-dark-600">
+    <div class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto"></div>
+  </nav>
+
+  <!-- Sub Tabs -->
+  <nav id="subTabs" class="bg-dark-800 border-b border-dark-700">
+    <div class="max-w-7xl mx-auto px-4 py-0 flex gap-4">
+      <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('company')"
+        data-subtab="company">🏢 회사별</button>
+      <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('compare')"
+        data-subtab="compare">📊 스펙 비교</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-4 md:py-6">
+    <!-- Company Tab Content -->
+    <div id="companyTabContent">
+      <div class="flex gap-6" id="mainLayout">
+        <div class="w-full lg:w-1/4" id="companyListPanel">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-semibold" id="companyListTitle">회사 목록</h2>
+          </div>
+          <div id="companyList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
+          <div id="emptyCompanyMsg" class="text-center py-12 text-dark-400 hidden">
+            <div class="text-3xl mb-2">🏢</div>
+            <p class="text-sm">등록된 회사가 없습니다</p>
+          </div>
+        </div>
+        <div class="w-full lg:w-1/4" id="productListPanel">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-semibold" id="productListTitle">제품 목록</h2>
+            <button onclick="openProductModal()" class="btn-primary text-xs px-2.5 py-1.5 rounded-lg font-medium">+
+              제품</button>
+          </div>
+          <div id="productList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
+          <div id="emptyProductMsg" class="text-center py-12 text-dark-400 hidden">
+            <div class="text-3xl mb-2">📦</div>
+            <p class="text-sm">회사를 선택하세요</p>
+          </div>
+        </div>
+        <div class="hidden lg:block w-full lg:w-1/2" id="detailPanel">
+          <div id="productDetail" class="fade-in"></div>
+          <div id="emptyDetailMsg" class="text-center py-20 text-dark-400">
+            <div class="text-4xl mb-3">👈</div>
+            <p>제품을 선택하세요</p>
+            <p class="text-sm mt-1">스펙 및 가격 정보가 표시됩니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare Tab Content -->
+    <div id="compareTabContent" class="hidden">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <h2 class="text-base font-semibold">📊 스펙 비교</h2>
+          <select id="compareDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
+            class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
+            <option value="KRW">KRW (원)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CNY">CNY (¥)</option>
+          </select>
+          <button onclick="toggleCompareSpecPanel()" id="compareSpecToggleBtn"
+            class="text-xs px-2 py-1 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500">⚙️ 표시 스펙 설정 ▼</button>
+        </div>
+        <button onclick="openCompareExcelPreview()" class="btn-primary text-xs px-3 py-1.5 rounded-lg font-medium">📥 비교 엑셀 내보내기</button>
+      </div>
+      <div id="compareSpecPanel" class="mb-4 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in"></div>
+      <div id="compareCheckboxes" class="mb-4 flex flex-wrap gap-2"></div>
+      <div id="compareTableWrap" class="overflow-x-auto"></div>
+    </div>
+
+    <!-- Quote Builder Section -->
+    <div class="mt-6 border-t border-dark-600 pt-4" id="quoteSection">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-3">
+          <h2 class="text-base font-semibold">📑 최종 견적</h2>
+          <select id="quoteDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
+            class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
+            <option value="KRW">KRW (원)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CNY">CNY (¥)</option>
+          </select>
+        </div>
+        <button onclick="openQuoteExcelPreview()" class="btn-primary text-xs px-3 py-2 rounded-lg font-medium">📊 견적 엑셀
+          내보내기</button>
+      </div>
+      <div id="quoteBuilder" class="space-y-4"></div>
+      <div id="quoteTotals"></div>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-[999] hidden">
+    <div class="bg-accent rounded-lg px-4 py-2 text-white text-sm font-medium shadow-lg shadow-accent/30 fade-in"></div>
+  </div>
+
+  <!-- MODALS will be generated dynamically -->
+  <div id="modalContainer"></div>
+  </div> <!-- End appWrapper -->
+
+  <script>
+    /* ===================== DATA ===================== */
+    const DEFAULT_CATEGORIES = ['Module', 'SMPS', 'Cable', 'Cabinet', 'Receiver Card'];
+    const DEFAULT_SPECS = {
+      'Module': [{ name: '픽셀 피치', type: 'text' }, { name: '밝기(nit)', type: 'number' }, { name: '해상도', type: 'text' }, { name: '모듈 크기', type: 'text' }, { name: '구동방식', type: 'text' }, { name: 'CHIP', type: 'text' }, { name: 'IC', type: 'text' }, { name: 'PCB', type: 'text' }, { name: 'SCAN', type: 'text' }, { name: 'A/S', type: 'text' }],
+      'SMPS': [{ name: '입력전압', type: 'text' }, { name: '출력전압', type: 'text' }, { name: '출력전류', type: 'text' }, { name: '용량(W)', type: 'number' }, { name: '싸이즈', type: 'text' }, { name: '버전', type: 'text' }],
+      'Cable': [{ name: '케이블 종류', type: 'text' }, { name: '길이', type: 'text' }, { name: '커넥터 타입', type: 'text' }],
+      'Cabinet': [{ name: '캐비닛 크기', type: 'text' }, { name: '무게', type: 'text' }, { name: '소재', type: 'text' }, { name: 'IP등급', type: 'text' }],
+      'Receiver Card': []
+    };
+
+    let data = { categories: [], specs: {}, companies: {}, products: [], quoteSelections: {} };
+    let currentCategory = '';
+    let currentSubTab = 'company';
+    let selectedCompanyId = null;
+    let selectedProductId = null;
+
+    function uid() { return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8) }
+    function getCompany(id) { for (const cat of Object.keys(data.companies)) { const c = (data.companies[cat] || []).find(x => x.id === id); if (c) return c } return null }
+    function getCatCompanies(cat) { return data.companies[cat] || [] }
+    function save() {
+      if(window.syncTimeout) clearTimeout(window.syncTimeout);
+      window.syncTimeout = setTimeout(async () => {
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) return;
+        await sb.from('user_data').upsert(
+          { user_id: user.id, payload: data, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+      }, 500);
+    }
+
+    /* ===================== SUPABASE SQL =====================
+    -- user_data 테이블 생성 및 RLS
+    create table user_data (
+      id uuid default gen_random_uuid() primary key,
+      user_id uuid references auth.users(id) on delete cascade unique,
+      payload jsonb,
+      updated_at timestamptz default now()
+    );
+    alter table user_data enable row level security;
+    create policy "본인 데이터만 접근" on user_data
+      for all using (auth.uid() = user_id);
+    ========================================================== */
+
+    /* ===================== SUPABASE INIT & AUTH ===================== */
+    const SUPABASE_URL = 'https://wcmybffcvwayaindgkua.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbXliZmZjdndheWFpbmRna3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTAyMzUsImV4cCI6MjA4OTg4NjIzNX0.aHG18mgMwd4eeS0bnHVdq3WCXFcB1KStyRv2qtMEWyI';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+      errEl.style.display = 'none';
+      if (!email || !password) { errEl.textContent = '이메일/비밀번호 입력'; errEl.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = '로그인 중...';
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false; btn.textContent = '로그인';
+      if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    }
+
+    async function doLogout() {
+      if (!confirm('로그아웃 하시겠습니까?')) return;
+      try {
+        await sb.auth.signOut();
+      } catch (e) {
+        console.error('Logout error:', e);
+      }
+      if(window.syncTimeout) clearTimeout(window.syncTimeout);
+      window.location.reload();
+    }
+
+    async function load() {
+      console.log('[load] 시작: 데이터 불러오기 요청');
+      const { data: { user }, error: userError } = await sb.auth.getUser();
+      if (userError || !user) {
+        console.error('[load] 에러: 유저 정보 없음', userError);
+        throw new Error('User not found');
+      }
+      
+      const { data: resData, error } = await sb.from('user_data').select('payload').eq('user_id', user.id).maybeSingle();
+      
+      if (error) {
+        console.error('[load] 에러: 테이블 조회 실패', error);
+        if (error.code === '42P01') {
+          alert("Supabase에 'user_data' 테이블이 생성되지 않았습니다. SQL을 실행해주세요!");
+        }
+        throw error;
+      }
+      
+      if (resData && resData.payload) {
+        data = resData.payload;
+        if (!data.companies) {
+          data.companies = {};
+          data.categories.forEach(cat => data.companies[cat] = []);
+        }
+        if (!data.quoteSelections) data.quoteSelections = {};
+        console.log('[load] 완료: 기존 데이터 로드 성공', data);
+      } else {
+        console.log('[load] 완료: 데이터가 없어 에러 throw 진행 (fallback 예정)');
+        throw new Error('No data found');
+      }
+    }
+    function initDefaultData() {
+      data.categories = [...DEFAULT_CATEGORIES];
+      data.specs = {};
+      DEFAULT_CATEGORIES.forEach(c => { data.specs[c] = DEFAULT_SPECS[c] ? DEFAULT_SPECS[c].map(s => ({ ...s })) : [] });
+      data.companies = {}; data.categories.forEach(c => data.companies[c] = []); data.products = []; data.quoteSelections = {};
+    }
+
+    /* ===================== TOAST & MODAL ===================== */
+    function showToast(msg) { const t = document.getElementById('toast'); t.querySelector('div').textContent = msg; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2000) }
+    function openModal(id) { document.getElementById(id).classList.add('active') }
+    function closeModal(id) { document.getElementById(id).classList.remove('active') }
+    function formatPrice(price, currency) {
+      const num = parseFloat(price); if (isNaN(num)) return price;
+      if (currency === 'KRW') return num.toLocaleString('ko-KR') + '원';
+      if (currency === 'USD') return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (currency === 'CNY') return '¥' + num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return num.toString();
+    }
+    function escQ(s) { return s.replace(/'/g, "\\'") }
+
+    /* ===================== EXCHANGE RATE ===================== */
+    let exchangeRates = { usdKrw: 1350, cnyKrw: 185, usdCny: 7.3 };
+    let quoteDisplayCurrency = 'KRW';
+    let quoteQuantities = {}; // {prodId: number}
+
+    function loadExchangeRates() {
+      try { const raw = localStorage.getItem('exchangeRates'); if (raw) exchangeRates = JSON.parse(raw) } catch (e) { }
+      try { const cur = localStorage.getItem('quoteDisplayCurrency'); if (cur) quoteDisplayCurrency = cur } catch (e) { }
+      try { const qty = localStorage.getItem('quoteQuantities'); if (qty) quoteQuantities = JSON.parse(qty) } catch (e) { }
+    }
+    function saveExchangeRates() {
+      const u = parseFloat(document.getElementById('rateUsdKrw').value) || exchangeRates.usdKrw;
+      const c = parseFloat(document.getElementById('rateCnyKrw').value) || exchangeRates.cnyKrw;
+      const uc = parseFloat(document.getElementById('rateUsdCny').value) || exchangeRates.usdCny;
+      exchangeRates = { usdKrw: u, cnyKrw: c, usdCny: uc };
+      localStorage.setItem('exchangeRates', JSON.stringify(exchangeRates));
+      closeModal('modalExchangeRate');
+      showToast('환율 저장 완료');
+      renderQuoteBuilder();
+    }
+    function openExchangeRateModal() {
+      document.getElementById('rateUsdKrw').value = exchangeRates.usdKrw;
+      document.getElementById('rateCnyKrw').value = exchangeRates.cnyKrw;
+      document.getElementById('rateUsdCny').value = exchangeRates.usdCny;
+      openModal('modalExchangeRate');
+    }
+    function convertToKRW(price, fromCurrency) {
+      const num = parseFloat(price) || 0;
+      if (fromCurrency === 'KRW') return num;
+      if (fromCurrency === 'USD') return num * exchangeRates.usdKrw;
+      if (fromCurrency === 'CNY') return num * exchangeRates.cnyKrw;
+      return num;
+    }
+    function convertFromKRW(krwAmount, toCurrency) {
+      if (toCurrency === 'KRW') return krwAmount;
+      if (toCurrency === 'USD') return krwAmount / exchangeRates.usdKrw;
+      if (toCurrency === 'CNY') return krwAmount / exchangeRates.cnyKrw;
+      return krwAmount;
+    }
+    function convertPrice(price, fromCurrency, toCurrency) {
+      if (fromCurrency === toCurrency) return parseFloat(price) || 0;
+      const krw = convertToKRW(price, fromCurrency);
+      return convertFromKRW(krw, toCurrency);
+    }
+    function formatConverted(price, fromCurrency) {
+      const converted = convertPrice(price, fromCurrency, quoteDisplayCurrency);
+      return formatPrice(converted, quoteDisplayCurrency);
+    }
+    function setQuoteDisplayCurrency(cur) {
+      quoteDisplayCurrency = cur;
+      localStorage.setItem('quoteDisplayCurrency', cur);
+      const qSel = document.getElementById('quoteDisplayCurrency');
+      if (qSel) qSel.value = cur;
+      const cSel = document.getElementById('compareDisplayCurrency');
+      if (cSel) cSel.value = cur;
+      renderQuoteBuilder();
+      if (currentSubTab === 'compare') renderCompareTab();
+    }
+    function setQuoteQuantity(prodId, qty) {
+      quoteQuantities[prodId] = parseInt(qty) || 1;
+      localStorage.setItem('quoteQuantities', JSON.stringify(quoteQuantities));
+      renderQuoteBuilder();
+    }
+    function getQuoteQty(prodId) { return quoteQuantities[prodId] || 1 }
+
+    /* ===================== DYNAMIC MODALS ===================== */
+    function initModals() {
+      document.getElementById('modalContainer').innerHTML = `
+  <div id="modalCategory" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCategory')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">카테고리 관리</h3><button onclick="closeModal('modalCategory')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div class="flex gap-2 mb-4"><input id="newCatName" type="text" placeholder="새 카테고리명" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><button onclick="addCategory()" class="btn-primary text-sm px-4 py-2 rounded-lg font-medium">추가</button></div>
+    <div id="categoryManageList" class="space-y-2"></div>
+  </div></div>
+
+  <div id="modalCatEdit" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCatEdit')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">카테고리 수정</h3><button onclick="closeModal('modalCatEdit')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <input type="hidden" id="editCatOldName">
+    <div class="mb-3"><label class="text-sm text-dark-300 block mb-1">카테고리명</label><input id="editCatName" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+    <div id="catEditPreview" class="mb-3 p-3 bg-dark-700/50 rounded-lg hidden"><h4 class="text-xs text-dark-400 mb-2">미리보기</h4><div id="catEditPreviewContent"></div></div>
+    <div class="flex gap-2"><button onclick="previewCatEdit()" class="btn-secondary flex-1 py-2 rounded-lg font-medium">미리보기</button><button onclick="saveCatEdit()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button></div>
+  </div></div>
+
+  <div id="modalSpec" class="modal-overlay" onclick="if(event.target===this)closeModal('modalSpec')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">스펙 항목 관리</h3><button onclick="closeModal('modalSpec')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div class="mb-3"><label class="text-sm text-dark-300 block mb-1">카테고리 선택</label><select id="specCatSelect" onchange="renderSpecManageList()" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></select></div>
+    <div class="flex gap-2 mb-2"><input id="newSpecName" type="text" placeholder="스펙 항목명" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm">
+    <select id="newSpecType" onchange="document.getElementById('specOptionsRow').classList.toggle('hidden',this.value!=='select')" class="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><option value="text">텍스트</option><option value="number">숫자</option><option value="select">선택</option></select></div>
+    <div id="specOptionsRow" class="mb-2 hidden"><input id="newSpecOptions" type="text" placeholder="옵션 (쉼표 구분)" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+    <button onclick="addSpec()" class="btn-primary text-sm px-4 py-2 rounded-lg font-medium mb-4 w-full">스펙 추가</button>
+    <div id="specManageList" class="space-y-2"></div>
+  </div></div>
+
+  <div id="modalSpecEdit" class="modal-overlay" onclick="if(event.target===this)closeModal('modalSpecEdit')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">스펙 항목 수정</h3><button onclick="closeModal('modalSpecEdit')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <input type="hidden" id="editSpecCat"><input type="hidden" id="editSpecIdx">
+    <div class="space-y-3">
+      <div><label class="text-sm text-dark-300 block mb-1">항목명</label><input id="editSpecName" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      <div><label class="text-sm text-dark-300 block mb-1">타입</label><select id="editSpecType" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" onchange="document.getElementById('editSpecOptionsRow').classList.toggle('hidden',this.value!=='select')"><option value="text">텍스트</option><option value="number">숫자</option><option value="select">선택</option></select></div>
+      <div id="editSpecOptionsRow" class="hidden"><label class="text-sm text-dark-300 block mb-1">옵션 (쉼표 구분)</label><input id="editSpecOptions" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+    </div>
+    <div class="flex gap-2 mt-4"><button onclick="saveSpecEdit()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button><button onclick="closeModal('modalSpecEdit')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button></div>
+  </div></div>
+
+  <div id="modalCompany" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCompany')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold" id="companyModalTitle">회사 관리</h3><button onclick="closeModal('modalCompany')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div class="space-y-2 mb-4">
+      <div class="flex gap-2"><input id="newCompName" type="text" placeholder="회사명" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><input id="newCompCountry" type="text" placeholder="국가" class="w-24 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      <div class="flex gap-2"><input id="newCompMemo" type="text" placeholder="메모" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><button onclick="addCompany()" class="btn-primary text-sm px-4 py-2 rounded-lg font-medium">추가</button></div>
+    </div>
+    <div id="companyManageList" class="space-y-2"></div>
+  </div></div>
+
+  <div id="modalCompanyEdit" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCompanyEdit')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">회사 수정</h3><button onclick="closeModal('modalCompanyEdit')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <input type="hidden" id="editCompId">
+    <div class="space-y-3">
+      <div><label class="text-sm text-dark-300 block mb-1">회사명</label><input id="editCompName" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      <div><label class="text-sm text-dark-300 block mb-1">국가</label><input id="editCompCountry" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      <div><label class="text-sm text-dark-300 block mb-1">메모</label><textarea id="editCompMemo" rows="2" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></textarea></div>
+    </div>
+    <div id="compEditPreview" class="mt-3 p-3 bg-dark-700/50 rounded-lg hidden"><h4 class="text-xs text-dark-400 mb-2">미리보기</h4><div id="compEditPreviewContent"></div></div>
+    <div class="flex gap-2 mt-4"><button onclick="previewCompEdit()" class="btn-secondary flex-1 py-2 rounded-lg font-medium">미리보기</button><button onclick="saveCompanyEdit()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button></div>
+  </div></div>
+
+  <div id="modalProduct" class="modal-overlay" onclick="if(event.target===this)closeModal('modalProduct')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold" id="productModalTitle">제품 추가</h3><button onclick="closeModal('modalProduct')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <input type="hidden" id="editProductId">
+    <div class="space-y-3">
+      <div><label class="text-sm text-dark-300 block mb-1">회사 *</label><select id="prodCompany" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></select></div>
+      <div><label class="text-sm text-dark-300 block mb-1">카테고리</label><select id="prodCategory" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" onchange="renderProdSpecFields()"></select></div>
+      <div><label class="text-sm text-dark-300 block mb-1">제품명 *</label><input id="prodName" type="text" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      <div class="flex gap-2">
+        <div class="flex-1"><label class="text-sm text-dark-300 block mb-1">가격</label><input id="prodPrice" type="number" step="any" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+        <div class="w-24"><label class="text-sm text-dark-300 block mb-1">통화</label><select id="prodCurrency" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><option value="USD">USD</option><option value="KRW">KRW</option><option value="CNY">CNY</option></select></div>
+      </div>
+      <div class="flex gap-2">
+        <div class="flex-1"><label class="text-sm text-dark-300 block mb-1">단위</label><input id="prodUnit" type="text" placeholder="개, 박스 등" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+        <div class="flex-1"><label class="text-sm text-dark-300 block mb-1">리드타임</label><input id="prodLeadTime" type="text" placeholder="예: 7일" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>
+      </div>
+      <div id="prodSpecFields" class="space-y-3"></div>
+      <div><label class="text-sm text-dark-300 block mb-1">메모</label><textarea id="prodMemo" rows="2" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></textarea></div>
+    </div>
+    <div id="prodEditPreview" class="mt-3 p-3 bg-dark-700/50 rounded-lg hidden"><h4 class="text-xs text-dark-400 mb-2">미리보기</h4><div id="prodEditPreviewContent"></div></div>
+    <div class="flex gap-2 mt-4"><button onclick="previewProduct()" class="btn-secondary flex-1 py-2 rounded-lg font-medium">미리보기</button><button onclick="saveProduct()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button></div>
+  </div></div>
+
+  <div id="modalExcelPreview" class="modal-overlay" onclick="if(event.target===this)closeModal('modalExcelPreview')"><div class="modal-box wide">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold" id="excelPreviewTitle">엑셀 미리보기</h3><button onclick="closeModal('modalExcelPreview')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div id="excelPreviewControls" class="mb-3"></div>
+    <div id="excelPreviewTable" class="overflow-x-auto mb-4"></div>
+    <div class="flex gap-2"><button onclick="executeExcelExport()" class="btn-primary flex-1 py-2 rounded-lg font-medium">📥 다운로드</button><button onclick="closeModal('modalExcelPreview')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button></div>
+  </div></div>
+
+  <div id="modalCategoryExport" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCategoryExport')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">데이터 엑셀 내보내기</h3><button onclick="closeModal('modalCategoryExport')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <p class="text-sm text-dark-300 mb-3">내보낼 카테고리를 선택하세요:</p>
+    <div class="mb-3 flex gap-2">
+      <button onclick="toggleAllCategoryExport(true)" class="btn-secondary text-xs px-3 py-1.5 rounded font-medium">전체 선택</button>
+      <button onclick="toggleAllCategoryExport(false)" class="btn-secondary text-xs px-3 py-1.5 rounded font-medium">전체 해제</button>
+    </div>
+    <div id="categoryExportCheckboxes" class="space-y-2 max-h-60 overflow-y-auto mb-4 bg-dark-700/50 p-3 rounded-lg border border-dark-600"></div>
+    <div class="flex gap-2">
+      <button onclick="executeCategoryExport()" class="btn-primary flex-1 py-2 rounded-lg font-medium">📥 내보내기</button>
+      <button onclick="closeModal('modalCategoryExport')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button>
+    </div>
+  </div></div>
+
+  <div id="modalExcelUpload" class="modal-overlay" onclick="if(event.target===this)closeModal('modalExcelUpload')"><div class="modal-box wide">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">엑셀 업로드</h3><button onclick="closeModal('modalExcelUpload')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div class="space-y-3">
+      <button onclick="downloadUploadTemplate()" class="btn-secondary text-sm px-4 py-2 rounded-lg font-medium w-full">📄 업로드 양식 다운로드</button>
+      <div class="border-2 border-dashed border-dark-500 rounded-lg p-6 text-center">
+        <p class="text-sm text-dark-300 mb-2">엑셀 파일을 선택하세요</p>
+        <input type="file" id="excelUploadFile" accept=".xlsx,.xls" class="text-sm" onchange="handleExcelUpload(event)">
+      </div>
+      <div id="uploadPreview" class="hidden">
+        <h4 class="text-sm font-semibold mb-2">업로드 미리보기</h4>
+        <div id="uploadPreviewTable" class="overflow-x-auto mb-3"></div>
+        <div id="uploadSummary" class="text-sm mb-3"></div>
+        <button onclick="confirmExcelUpload()" class="btn-primary w-full py-2 rounded-lg font-medium">확인 및 적용</button>
+      </div>
+    </div>
+  </div></div>
+
+  <div id="modalExchangeRate" class="modal-overlay" onclick="if(event.target===this)closeModal('modalExchangeRate')"><div class="modal-box" style="max-width:450px">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">💱 환율 설정</h3><button onclick="closeModal('modalExchangeRate')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div class="space-y-3">
+      <div class="flex items-center gap-2"><span class="text-sm w-28">USD 1$ =</span><input id="rateUsdKrw" type="number" step="any" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" placeholder="1350"><span class="text-sm text-dark-400">원 (KRW)</span></div>
+      <div class="flex items-center gap-2"><span class="text-sm w-28">CNY 1¥ =</span><input id="rateCnyKrw" type="number" step="any" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" placeholder="185"><span class="text-sm text-dark-400">원 (KRW)</span></div>
+      <div class="flex items-center gap-2"><span class="text-sm w-28">USD 1$ =</span><input id="rateUsdCny" type="number" step="any" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" placeholder="7.3"><span class="text-sm text-dark-400">CNY</span></div>
+    </div>
+    <div class="flex gap-2 mt-4"><button onclick="saveExchangeRates()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button><button onclick="closeModal('modalExchangeRate')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button></div>
+  </div></div>`;
+    }
+    /* ===================== CATEGORY ===================== */
+    function renderCategoryTabs() {
+      const c = document.querySelector('#categoryTabs > div');
+      c.innerHTML = data.categories.map(cat => `<button class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap ${cat === currentCategory ? 'active' : 'bg-dark-700 text-dark-300 hover:bg-dark-600 hover:text-dark-100'}" onclick="switchCategory('${escQ(cat)}')">${cat}</button>`).join('');
+    }
+    function switchCategory(cat) { currentCategory = cat; selectedCompanyId = null; selectedProductId = null; renderCategoryTabs(); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder() }
+    function openManageModal(type) {
+      if (type === 'category') { renderCategoryManageList(); openModal('modalCategory') }
+      else if (type === 'spec') { document.getElementById('specCatSelect').innerHTML = data.categories.map(c => `<option value="${c}">${c}</option>`).join(''); renderSpecManageList(); openModal('modalSpec') }
+      else if (type === 'company') { document.getElementById('companyModalTitle').textContent = '회사 관리 — ' + currentCategory; renderCompanyManageList(); openModal('modalCompany') }
+    }
+    function renderCategoryManageList() {
+      document.getElementById('categoryManageList').innerHTML = data.categories.map(c => `<div class="flex items-center justify-between bg-dark-700 rounded-lg px-3 py-2"><span class="text-sm">${c}</span><div class="flex gap-1"><button onclick="editCategory('${escQ(c)}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="deleteCategory('${escQ(c)}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div>`).join('');
+    }
+    function addCategory() { const inp = document.getElementById('newCatName'); const n = inp.value.trim(); if (!n) { showToast('카테고리명을 입력하세요'); return } if (data.categories.includes(n)) { showToast('이미 존재합니다'); return } data.categories.push(n); data.specs[n] = []; data.companies[n] = []; inp.value = ''; save(); renderCategoryManageList(); renderCategoryTabs(); showToast('카테고리 추가됨') }
+    function editCategory(old) { document.getElementById('editCatOldName').value = old; document.getElementById('editCatName').value = old; document.getElementById('catEditPreview').classList.add('hidden'); openModal('modalCatEdit') }
+    function previewCatEdit() { const nw = document.getElementById('editCatName').value.trim(); const old = document.getElementById('editCatOldName').value; if (!nw) { showToast('카테고리명을 입력하세요'); return } const pv = document.getElementById('catEditPreview'); pv.classList.remove('hidden'); document.getElementById('catEditPreviewContent').innerHTML = `<p class="text-sm"><span class="text-dark-400">변경:</span> <span class="text-red-400 line-through">${old}</span> → <span class="text-green-400">${nw}</span></p>` }
+    function saveCatEdit() { const old = document.getElementById('editCatOldName').value; const nw = document.getElementById('editCatName').value.trim(); if (!nw) { showToast('카테고리명을 입력하세요'); return } if (nw !== old && data.categories.includes(nw)) { showToast('이미 존재합니다'); return } const idx = data.categories.indexOf(old); if (idx >= 0) data.categories[idx] = nw; if (data.specs[old]) { data.specs[nw] = data.specs[old]; if (nw !== old) delete data.specs[old] } if (data.companies[old]) { data.companies[nw] = data.companies[old]; if (nw !== old) delete data.companies[old] } data.products.forEach(p => { if (p.category === old) p.category = nw }); if (currentCategory === old) currentCategory = nw; save(); closeModal('modalCatEdit'); renderCategoryManageList(); renderCategoryTabs(); renderCompanyTab(); showToast('카테고리 수정됨') }
+    function deleteCategory(name) { if (!confirm(`"${name}" 카테고리를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; data.categories = data.categories.filter(c => c !== name); delete data.specs[name]; delete data.companies[name]; data.products = data.products.filter(p => p.category !== name); delete data.quoteSelections[name]; if (currentCategory === name) currentCategory = data.categories[0] || ''; save(); renderCategoryManageList(); renderCategoryTabs(); renderCompanyTab(); renderQuoteBuilder(); showToast('카테고리 삭제됨') }
+
+    /* ===================== SPEC ===================== */
+    function renderSpecManageList() {
+      const cat = document.getElementById('specCatSelect').value; const specs = data.specs[cat] || [];
+      document.getElementById('specManageList').innerHTML = specs.length ? specs.map((s, i) => `<div class="flex items-center justify-between bg-dark-700 rounded-lg px-3 py-2"><div><span class="text-sm font-medium">${s.name}</span><span class="text-xs text-dark-400 ml-2">[${s.type === 'text' ? '텍스트' : s.type === 'number' ? '숫자' : '선택'}]</span>${s.options ? `<span class="text-xs text-dark-400 ml-1">(${s.options.join(', ')})</span>` : ''}</div><div class="flex gap-1"><button onclick="editSpec('${escQ(cat)}',${i})" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="deleteSpec('${escQ(cat)}',${i})" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div>`).join('') : '<p class="text-sm text-dark-400 text-center py-4">스펙 항목이 없습니다</p>';
+    }
+    function addSpec() { const cat = document.getElementById('specCatSelect').value; const name = document.getElementById('newSpecName').value.trim(); const type = document.getElementById('newSpecType').value; if (!name) { showToast('항목명을 입력하세요'); return } if (!data.specs[cat]) data.specs[cat] = []; const spec = { name, type }; if (type === 'select') { const opts = document.getElementById('newSpecOptions').value.split(',').map(o => o.trim()).filter(Boolean); if (!opts.length) { showToast('옵션을 입력하세요'); return } spec.options = opts } data.specs[cat].push(spec); document.getElementById('newSpecName').value = ''; document.getElementById('newSpecOptions').value = ''; save(); renderSpecManageList(); showToast('스펙 추가됨') }
+    function editSpec(cat, idx) { const s = data.specs[cat][idx]; document.getElementById('editSpecCat').value = cat; document.getElementById('editSpecIdx').value = idx; document.getElementById('editSpecName').value = s.name; document.getElementById('editSpecType').value = s.type; document.getElementById('editSpecOptions').value = s.options ? s.options.join(', ') : ''; document.getElementById('editSpecOptionsRow').classList.toggle('hidden', s.type !== 'select'); openModal('modalSpecEdit') }
+    function saveSpecEdit() { const cat = document.getElementById('editSpecCat').value; const idx = parseInt(document.getElementById('editSpecIdx').value); const name = document.getElementById('editSpecName').value.trim(); const type = document.getElementById('editSpecType').value; if (!name) { showToast('항목명을 입력하세요'); return } const oldName = data.specs[cat][idx].name; data.specs[cat][idx] = { name, type }; if (type === 'select') { const opts = document.getElementById('editSpecOptions').value.split(',').map(o => o.trim()).filter(Boolean); data.specs[cat][idx].options = opts } if (oldName !== name) { data.products.filter(p => p.category === cat).forEach(p => { if (p.specValues && p.specValues[oldName] !== undefined) { p.specValues[name] = p.specValues[oldName]; delete p.specValues[oldName] } }) } save(); closeModal('modalSpecEdit'); renderSpecManageList(); renderCompanyTab(); showToast('스펙 수정됨') }
+    function deleteSpec(cat, idx) { const n = data.specs[cat][idx].name; if (!confirm(`"${n}" 삭제?`)) return; data.specs[cat].splice(idx, 1); data.products.filter(p => p.category === cat).forEach(p => { if (p.specValues) delete p.specValues[n] }); save(); renderSpecManageList(); renderCompanyTab(); showToast('스펙 삭제됨') }
+    /* ===================== COMPANY ===================== */
+    function renderCompanyManageList() {
+      const comps = getCatCompanies(currentCategory);
+      document.getElementById('companyManageList').innerHTML = comps.length ? comps.map(c => `<div class="flex items-center justify-between bg-dark-700 rounded-lg px-3 py-2"><div><span class="text-sm font-medium">${c.name}</span>${c.country ? `<span class="text-xs text-dark-400 ml-2">${c.country}</span>` : ''}${c.memo ? `<span class="text-xs text-dark-400 ml-2">- ${c.memo}</span>` : ''}</div><div class="flex gap-1"><button onclick="editCompany('${c.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="deleteCompany('${c.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div>`).join('') : '<p class="text-sm text-dark-400 text-center py-4">등록된 회사가 없습니다</p>';
+    }
+    function addCompany() { const n = document.getElementById('newCompName').value.trim(); const c = document.getElementById('newCompCountry').value.trim(); const m = document.getElementById('newCompMemo').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } if (!data.companies[currentCategory]) data.companies[currentCategory] = []; data.companies[currentCategory].push({ id: uid(), name: n, country: c, memo: m }); document.getElementById('newCompName').value = ''; document.getElementById('newCompCountry').value = ''; document.getElementById('newCompMemo').value = ''; save(); renderCompanyManageList(); renderCompanyTab(); showToast('회사 추가됨') }
+    function editCompany(id) { const c = getCompany(id); if (!c) return; document.getElementById('editCompId').value = id; document.getElementById('editCompName').value = c.name; document.getElementById('editCompCountry').value = c.country || ''; document.getElementById('editCompMemo').value = c.memo || ''; document.getElementById('compEditPreview').classList.add('hidden'); openModal('modalCompanyEdit') }
+    function previewCompEdit() { const n = document.getElementById('editCompName').value.trim(); const c = document.getElementById('editCompCountry').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } const pv = document.getElementById('compEditPreview'); pv.classList.remove('hidden'); document.getElementById('compEditPreviewContent').innerHTML = `<p class="text-sm"><strong>${n}</strong> ${c ? `(${c})` : ''}</p>` }
+    function saveCompanyEdit() { const id = document.getElementById('editCompId').value; const n = document.getElementById('editCompName').value.trim(); const c = document.getElementById('editCompCountry').value.trim(); const m = document.getElementById('editCompMemo').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } const comp = getCatCompanies(currentCategory).find(x => x.id === id) || getCompany(id); if (comp) { comp.name = n; comp.country = c; comp.memo = m } save(); closeModal('modalCompanyEdit'); renderCompanyManageList(); renderCompanyTab(); showToast('회사 수정됨') }
+    function deleteCompany(id) { const c = getCompany(id); if (!c || !confirm(`"${c.name}" 회사를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; data.companies[currentCategory] = (data.companies[currentCategory] || []).filter(x => x.id !== id); data.products = data.products.filter(p => p.companyId !== id); save(); if (selectedCompanyId === id) { selectedCompanyId = null; selectedProductId = null } renderCompanyManageList(); renderCompanyTab(); renderQuoteBuilder(); showToast('회사 삭제됨') }
+
+    /* ===================== COMPANY TAB VIEW ===================== */
+    function renderCompanyTab() {
+      const allCompanies = getCatCompanies(currentCategory);
+      const compList = document.getElementById('companyList');
+      const compEmpty = document.getElementById('emptyCompanyMsg');
+      if (!allCompanies.length) { compList.innerHTML = ''; compEmpty.classList.remove('hidden'); compEmpty.querySelector('p').textContent = '회사를 먼저 등록하세요'; }
+      else {
+        compEmpty.classList.add('hidden');
+        compList.innerHTML = allCompanies.map(c => {
+          const prodCount = data.products.filter(p => p.companyId === c.id && p.category === currentCategory).length;
+          const isSel = c.id === selectedCompanyId;
+          return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectCompany('${c.id}')"><div class="flex justify-between items-center"><div><h3 class="font-medium text-sm">${c.name}</h3><p class="text-xs text-dark-400">${c.country || ''} · 제품 ${prodCount}개</p></div></div></div>`;
+        }).join('');
+      }
+      renderProductListForCompany();
+      renderProductDetail();
+    }
+    function selectCompany(cid) { selectedCompanyId = cid; selectedProductId = null; renderCompanyTab() }
+    function renderProductListForCompany() {
+      const list = document.getElementById('productList');
+      const empty = document.getElementById('emptyProductMsg');
+      if (!selectedCompanyId) { list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '회사를 선택하세요'; return }
+      const products = data.products.filter(p => p.companyId === selectedCompanyId && p.category === currentCategory);
+      const comp = getCompany(selectedCompanyId);
+      document.getElementById('productListTitle').textContent = (comp ? comp.name : '') + ' 제품';
+      if (!products.length) { list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '등록된 제품이 없습니다'; return }
+      empty.classList.add('hidden');
+      list.innerHTML = products.map(p => {
+        const isSel = p.id === selectedProductId;
+        return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectProduct('${p.id}')"><div class="flex justify-between items-start"><div><h3 class="font-medium text-sm">${p.name}</h3><p class="text-xs text-dark-400">${p.price ? formatPrice(p.price, p.currency) : '-'}</p></div><div class="flex gap-1"><button onclick="event.stopPropagation();openProductModal('${p.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="event.stopPropagation();deleteProduct('${p.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div></div>`;
+      }).join('');
+    }
+    function selectProduct(pid) { selectedProductId = pid; renderProductListForCompany(); renderProductDetail(); if (window.innerWidth < 1024) { const dp = document.getElementById('detailPanel'); dp.style.display = 'block'; dp.style.position = 'fixed'; dp.style.inset = '0'; dp.style.zIndex = '45'; dp.style.background = '#0f172a'; dp.style.overflowY = 'auto'; dp.style.padding = '16px' } }
+
+    /* ===================== PRODUCT DETAIL ===================== */
+    function renderProductDetail() {
+      const detail = document.getElementById('productDetail');
+      const empty = document.getElementById('emptyDetailMsg');
+      if (!selectedProductId) { detail.innerHTML = ''; empty.classList.remove('hidden'); return }
+      empty.classList.add('hidden');
+      const p = data.products.find(x => x.id === selectedProductId);
+      if (!p) { detail.innerHTML = ''; empty.classList.remove('hidden'); return }
+      const specs = data.specs[p.category] || [];
+      const comp = getCompany(p.companyId);
+      let html = `<div class="fade-in">
+    <div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">${p.name}</h2><div class="flex gap-2 mt-1"><span class="text-xs bg-accent/20 text-accent-light px-2 py-0.5 rounded-full">${p.category}</span><span class="text-xs bg-dark-600 text-dark-200 px-2 py-0.5 rounded-full">🏢 ${comp ? comp.name : '-'}</span></div></div>
+    <button onclick="openProductModal('${p.id}')" class="btn-secondary text-xs px-3 py-1.5 rounded-lg">수정</button></div>
+    <div class="price-highlight rounded-lg p-4 mb-4"><div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div><p class="text-xs text-dark-400">가격</p><p class="text-sm font-bold ${p.price ? 'text-green-400' : ''}">${p.price ? formatPrice(p.price, p.currency) : '-'}</p></div>
+      <div><p class="text-xs text-dark-400">통화</p><p class="text-sm">${p.currency || '-'}</p></div>
+      <div><p class="text-xs text-dark-400">단위</p><p class="text-sm">${p.unit || '-'}</p></div>
+      <div><p class="text-xs text-dark-400">리드타임</p><p class="text-sm">${p.leadTime || '-'}</p></div>
+    </div></div>`;
+      if (specs.length) { html += `<div class="bg-dark-700 rounded-lg p-4 mb-4"><h3 class="text-sm font-semibold text-dark-300 mb-2">📋 스펙</h3><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${specs.map(s => `<div class="text-sm"><span class="text-dark-400">${s.name}:</span><span class="font-medium ml-1">${(p.specValues && p.specValues[s.name]) || '-'}</span></div>`).join('')}</div></div>` }
+      if (p.memo) { html += `<div class="text-sm text-dark-400 bg-dark-700 rounded-lg p-3 mb-4">💬 ${p.memo}</div>` }
+      html += '</div>';
+      detail.innerHTML = html;
+    }
+    /* ===================== PRODUCT CRUD ===================== */
+    function openProductModal(editId) {
+      const selComp = document.getElementById('prodCompany');
+      selComp.innerHTML = getCatCompanies(currentCategory).map(c => `<option value="${c.id}" ${c.id === selectedCompanyId ? 'selected' : ''}>${c.name}</option>`).join('');
+      const selCat = document.getElementById('prodCategory');
+      selCat.innerHTML = data.categories.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join('');
+      document.getElementById('prodEditPreview').classList.add('hidden');
+      if (editId) {
+        const p = data.products.find(x => x.id === editId); if (!p) return;
+        document.getElementById('productModalTitle').textContent = '제품 수정';
+        document.getElementById('editProductId').value = editId;
+        selComp.value = p.companyId; selCat.value = p.category;
+        document.getElementById('prodName').value = p.name;
+        document.getElementById('prodPrice').value = p.price || '';
+        document.getElementById('prodCurrency').value = p.currency || 'USD';
+        document.getElementById('prodUnit').value = p.unit || '';
+        document.getElementById('prodLeadTime').value = p.leadTime || '';
+        document.getElementById('prodMemo').value = p.memo || '';
+        renderProdSpecFields(p.specValues);
+      } else {
+        document.getElementById('productModalTitle').textContent = '제품 추가';
+        document.getElementById('editProductId').value = '';
+        document.getElementById('prodName').value = '';
+        document.getElementById('prodPrice').value = '';
+        document.getElementById('prodCurrency').value = 'USD';
+        document.getElementById('prodUnit').value = '';
+        document.getElementById('prodLeadTime').value = '';
+        document.getElementById('prodMemo').value = '';
+        renderProdSpecFields();
+      }
+      openModal('modalProduct');
+    }
+    function renderProdSpecFields(existingValues) {
+      const cat = document.getElementById('prodCategory').value;
+      const specs = data.specs[cat] || [];
+      document.getElementById('prodSpecFields').innerHTML = specs.map(s => {
+        const val = existingValues ? (existingValues[s.name] || '') : '';
+        if (s.type === 'select') { const opts = (s.options || []).map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join(''); return `<div><label class="text-sm text-dark-300 block mb-1">${s.name}</label><select data-spec="${s.name}" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"><option value="">선택</option>${opts}</select></div>` }
+        return `<div><label class="text-sm text-dark-300 block mb-1">${s.name}</label><input data-spec="${s.name}" type="${s.type === 'number' ? 'number' : 'text'}" value="${val}" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"></div>`;
+      }).join('');
+    }
+    function gatherProductForm() {
+      const companyId = document.getElementById('prodCompany').value;
+      const category = document.getElementById('prodCategory').value;
+      const name = document.getElementById('prodName').value.trim();
+      const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+      const currency = document.getElementById('prodCurrency').value;
+      const unit = document.getElementById('prodUnit').value.trim();
+      const leadTime = document.getElementById('prodLeadTime').value.trim();
+      const memo = document.getElementById('prodMemo').value.trim();
+      const specValues = {};
+      document.querySelectorAll('#prodSpecFields [data-spec]').forEach(el => { specValues[el.dataset.spec] = el.value });
+      return { companyId, category, name, price, currency, unit, leadTime, memo, specValues };
+    }
+    function previewProduct() {
+      const d = gatherProductForm(); if (!d.name) { showToast('제품명을 입력하세요'); return }
+      const comp = getCompany(d.companyId);
+      const pv = document.getElementById('prodEditPreview'); pv.classList.remove('hidden');
+      let h = `<table class="w-full text-sm"><tr><td class="text-dark-400 py-1 w-24">회사</td><td>${comp ? comp.name : '-'}</td></tr><tr><td class="text-dark-400 py-1">카테고리</td><td>${d.category}</td></tr><tr><td class="text-dark-400 py-1">제품명</td><td class="font-medium">${d.name}</td></tr><tr><td class="text-dark-400 py-1">가격</td><td>${d.price ? formatPrice(d.price, d.currency) : '-'}</td></tr><tr><td class="text-dark-400 py-1">단위</td><td>${d.unit || '-'}</td></tr><tr><td class="text-dark-400 py-1">리드타임</td><td>${d.leadTime || '-'}</td></tr>`;
+      Object.entries(d.specValues).forEach(([k, v]) => { if (v) h += `<tr><td class="text-dark-400 py-1">${k}</td><td>${v}</td></tr>` });
+      h += `</table>`;
+      document.getElementById('prodEditPreviewContent').innerHTML = h;
+    }
+    function saveProduct() {
+      const editId = document.getElementById('editProductId').value;
+      const d = gatherProductForm();
+      if (!d.name) { showToast('제품명을 입력하세요'); return }
+      if (!d.companyId) { showToast('회사를 선택하세요'); return }
+      if (editId) { const p = data.products.find(x => x.id === editId); if (p) Object.assign(p, d) }
+      else { data.products.push({ id: uid(), ...d }) }
+      save(); closeModal('modalProduct'); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder();
+      showToast(editId ? '제품 수정됨' : '제품 추가됨');
+    }
+    function deleteProduct(pid) { const p = data.products.find(x => x.id === pid); if (!p || !confirm(`"${p.name}" 삭제?`)) return; data.products = data.products.filter(x => x.id !== pid); if (selectedProductId === pid) selectedProductId = null; save(); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder(); showToast('제품 삭제됨') }
+
+    /* ===================== SUB TABS ===================== */
+    function switchSubTab(tab) {
+      currentSubTab = tab;
+      document.querySelectorAll('[data-subtab]').forEach(b => { b.classList.toggle('active', b.dataset.subtab === tab) });
+      document.getElementById('companyTabContent').classList.toggle('hidden', tab !== 'company');
+      document.getElementById('compareTabContent').classList.toggle('hidden', tab !== 'compare');
+      if (tab === 'compare') renderCompareTab();
+    }
+
+    /* ===================== COMPARE TAB ===================== */
+    let compareSpecDisplay = {};
+    let compareSpecPanelOpen = false;
+    let compareSelected = {};
+    
+    function loadCompareSpecDisplay() {
+      try { const raw = localStorage.getItem('compareSpecDisplay'); if (raw) compareSpecDisplay = JSON.parse(raw) } catch (e) { compareSpecDisplay = {} }
+    }
+    function saveCompareSpecDisplay() {
+      localStorage.setItem('compareSpecDisplay', JSON.stringify(compareSpecDisplay));
+    }
+    function getCompareSpecsForCat(cat) {
+      if (!compareSpecDisplay[cat]) {
+        compareSpecDisplay[cat] = []; // Default empty
+      }
+      return compareSpecDisplay[cat];
+    }
+    function toggleCompareSpecPanel() {
+      compareSpecPanelOpen = !compareSpecPanelOpen;
+      renderCompareTab();
+    }
+    function toggleCompareSpec(cat, specName, checked) {
+      if (!compareSpecDisplay[cat]) compareSpecDisplay[cat] = [];
+      if (checked) {
+        if (!compareSpecDisplay[cat].includes(specName)) compareSpecDisplay[cat].push(specName);
+      } else {
+        compareSpecDisplay[cat] = compareSpecDisplay[cat].filter(s => s !== specName);
+      }
+      saveCompareSpecDisplay();
+      renderCompareTab(); // Need to re-render dropdown options
+    }
+
+    function formatCompareOption(prod, cat) {
+      const selectedSpecs = getCompareSpecsForCat(cat);
+      const specParts = [];
+      selectedSpecs.forEach(sn => {
+        const val = prod.specValues && prod.specValues[sn];
+        if (val) specParts.push(val);
+      });
+      let label = prod.name;
+      if (specParts.length) label += ' \u2014 ' + specParts.join(' \u2014 ');
+      return label;
+    }
+
+    function renderCompareTab() {
+      const compCurSel = document.getElementById('compareDisplayCurrency');
+      if (compCurSel) compCurSel.value = quoteDisplayCurrency;
+
+      const panel = document.getElementById('compareSpecPanel');
+      const btn = document.getElementById('compareSpecToggleBtn');
+      if (panel && btn) {
+        const catSpecs = data.specs[currentCategory] || [];
+        if (!catSpecs.length) {
+          btn.classList.add('hidden');
+          panel.classList.add('hidden');
+        } else {
+          btn.classList.remove('hidden');
+          if (compareSpecPanelOpen) {
+            btn.classList.add('bg-accent', 'text-white');
+            btn.classList.remove('bg-dark-600', 'text-dark-300');
+            btn.innerHTML = '⚙️ 표시 스펙 설정 ▲';
+            const selectedSpecs = getCompareSpecsForCat(currentCategory);
+            panel.innerHTML = catSpecs.map(s => {
+              const isChecked = selectedSpecs.includes(s.name);
+              return `<label class="flex items-center gap-1 bg-dark-600 rounded px-2 py-1 text-xs cursor-pointer hover:bg-dark-500 transition-colors">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCompareSpec('${escQ(currentCategory)}','${escQ(s.name)}',this.checked)" class="accent-indigo-500">
+                <span>${s.name}</span>
+              </label>`;
+            }).join('');
+            panel.classList.remove('hidden');
+          } else {
+            btn.classList.remove('bg-accent', 'text-white');
+            btn.classList.add('bg-dark-600', 'text-dark-300');
+            btn.innerHTML = '⚙️ 표시 스펙 설정 ▼';
+            panel.classList.add('hidden');
+          }
+        }
+      }
+
+      const comps = getCatCompanies(currentCategory);
+      const cbx = document.getElementById('compareCheckboxes');
+      if (!comps.length) { cbx.innerHTML = '<p class="text-sm text-dark-400">등록된 회사가 없습니다</p>'; document.getElementById('compareTableWrap').innerHTML = ''; return }
+      
+      cbx.innerHTML = comps.map(c => {
+        const prods = data.products.filter(p => p.companyId === c.id && p.category === currentCategory);
+        const selId = compareSelected[c.id] || '';
+        return `<div class="bg-dark-700 rounded-lg px-3 py-2 flex items-center gap-2"><span class="text-sm font-medium whitespace-nowrap">🏢 ${c.name}</span><select onchange="setCompareSelection('${c.id}',this.value)" class="bg-dark-600 border border-dark-500 rounded-lg px-2 py-1 text-sm flex-1 min-w-[150px]"><option value="">선택 안함</option>${prods.map(p => {
+          const lbl = formatCompareOption(p, currentCategory).replace(/"/g, '&quot;');
+          const convertedStr = formatPrice(convertPrice(p.price, p.currency, quoteDisplayCurrency), quoteDisplayCurrency);
+          const originalStr = formatPrice(p.price, p.currency);
+          const priceStr = p.currency === quoteDisplayCurrency ? originalStr : `${convertedStr} (${originalStr})`;
+          return `<option value="${p.id}" ${p.id === selId ? 'selected' : ''}>${lbl} \u2014 ${p.price ? priceStr : '-'}</option>`;
+        }).join('')}</select></div>`;
+      }).join('');
+      renderCompareTable();
+    }
+    function setCompareSelection(compId, prodId) { if (prodId) compareSelected[compId] = prodId; else delete compareSelected[compId]; renderCompareTable() }
+    function renderCompareTable() {
+      const wrap = document.getElementById('compareTableWrap');
+      const selected = Object.values(compareSelected).map(id => data.products.find(p => p.id === id)).filter(Boolean);
+      if (!selected.length) { wrap.innerHTML = '<p class="text-sm text-dark-400 text-center py-12">비교할 제품을 선택하세요</p>'; return }
+      const specs = data.specs[currentCategory] || [];
+      let h = '<table class="preview-table"><thead><tr><th class="sticky left-0 bg-dark-600 z-10">항목</th>';
+      selected.forEach(p => { const comp = getCompany(p.companyId); h += `<th>${comp ? comp.name + '<br>' : ''}${p.name}</th>` });
+      h += '</tr></thead><tbody>';
+      h += '<tr><td class="sticky left-0 bg-dark-700 font-medium">가격</td>';
+      selected.forEach(p => {
+        if (p.price) {
+          const converted = convertPrice(p.price, p.currency, quoteDisplayCurrency);
+          const convertedStr = formatPrice(converted, quoteDisplayCurrency);
+          const originalStr = formatPrice(p.price, p.currency);
+          if (p.currency === quoteDisplayCurrency) {
+            h += `<td>${originalStr}</td>`;
+          } else {
+            h += `<td>${convertedStr} <span class="text-xs text-dark-400 whitespace-nowrap">(${originalStr})</span></td>`;
+          }
+        } else {
+          h += `<td>-</td>`;
+        }
+      }); h += '</tr>';
+      h += '<tr><td class="sticky left-0 bg-dark-700 font-medium">단위</td>';
+      selected.forEach(p => { h += `<td>${p.unit || '-'}</td>` }); h += '</tr>';
+      h += '<tr><td class="sticky left-0 bg-dark-700 font-medium">리드타임</td>';
+      selected.forEach(p => { h += `<td>${p.leadTime || '-'}</td>` }); h += '</tr>';
+      specs.forEach(s => {
+        h += `<tr><td class="sticky left-0 bg-dark-700 font-medium">${s.name}</td>`;
+        selected.forEach(p => { h += `<td>${(p.specValues && p.specValues[s.name]) || '-'}</td>` }); h += '</tr>';
+      });
+      h += '</tbody></table>';
+      wrap.innerHTML = h;
+    }
+    /* ===================== QUOTE BUILDER ===================== */
+    let quoteSpecDisplay = {};  // {카테고리: [선택된 스펙명 배열]}
+    let quoteSpecPanelOpen = {};  // {카테고리: boolean} - 패널 열림 상태
+
+    function loadQuoteSpecDisplay() {
+      try { const raw = localStorage.getItem('quoteSpecDisplay'); if (raw) quoteSpecDisplay = JSON.parse(raw) } catch (e) { quoteSpecDisplay = {} }
+    }
+    function saveQuoteSpecDisplay() {
+      localStorage.setItem('quoteSpecDisplay', JSON.stringify(quoteSpecDisplay));
+    }
+    function getQuoteSpecsForCat(cat) {
+      if (!quoteSpecDisplay[cat]) {
+        quoteSpecDisplay[cat] = (data.specs[cat] || []).map(s => s.name);
+      }
+      return quoteSpecDisplay[cat];
+    }
+    function toggleQuoteSpecPanel(cat) {
+      quoteSpecPanelOpen[cat] = !quoteSpecPanelOpen[cat];
+      renderQuoteBuilder();
+    }
+    function toggleQuoteSpec(cat, specName, checked) {
+      if (!quoteSpecDisplay[cat]) quoteSpecDisplay[cat] = [];
+      if (checked) {
+        if (!quoteSpecDisplay[cat].includes(specName)) quoteSpecDisplay[cat].push(specName);
+      } else {
+        quoteSpecDisplay[cat] = quoteSpecDisplay[cat].filter(s => s !== specName);
+      }
+      saveQuoteSpecDisplay();
+      renderQuoteBuilder();
+    }
+    function formatQuoteOption(prod, cat) {
+      const selectedSpecs = getQuoteSpecsForCat(cat);
+      const specParts = [];
+      selectedSpecs.forEach(sn => {
+        const val = prod.specValues && prod.specValues[sn];
+        if (val) specParts.push(val);
+      });
+      let label = prod.name;
+      if (specParts.length) label += ' \u2014 ' + specParts.join(' / ');
+      label += ' \u2014 ' + (prod.price ? formatConverted(prod.price, prod.currency) : '-');
+      return label;
+    }
+    function renderQuoteBuilder() {
+      // 표시 통화 드롭다운 동기화
+      const curSel = document.getElementById('quoteDisplayCurrency');
+      if (curSel) curSel.value = quoteDisplayCurrency;
+      const container = document.getElementById('quoteBuilder');
+      if (!data.products.length) { container.innerHTML = '<p class="text-sm text-dark-400 text-center py-8">등록된 제품이 없습니다.</p>'; document.getElementById('quoteTotals').innerHTML = ''; return }
+      let html = '';
+      const catSubtotals = {};
+      let grandTotal = 0;
+      data.categories.forEach(cat => {
+        const prods = data.products.filter(p => p.category === cat); if (!prods.length) return;
+        if (!data.quoteSelections[cat]) data.quoteSelections[cat] = {};
+        const sel = data.quoteSelections[cat];
+        const catSpecs = data.specs[cat] || [];
+        const selectedSpecs = getQuoteSpecsForCat(cat);
+        const panelOpen = !!quoteSpecPanelOpen[cat];
+        const companies = [...new Set(prods.map(p => p.companyId))].map(cid => getCompany(cid)).filter(Boolean);
+        let catTotal = 0;
+
+        html += `<div class="mb-2"><div class="flex items-center gap-2 mb-2 flex-wrap">
+      <span class="text-xs font-bold uppercase tracking-wider bg-accent/20 text-accent-light px-2.5 py-1 rounded-full">${cat}</span>
+      ${catSpecs.length ? `<button onclick="toggleQuoteSpecPanel('${escQ(cat)}')" class="text-xs px-2 py-1 rounded-lg font-medium transition-all ${panelOpen ? 'bg-accent text-white' : 'bg-dark-600 text-dark-300 hover:bg-dark-500'}">\u2699\ufe0f \ud45c\uc2dc \uc2a4\ud399 \uc124\uc815${panelOpen ? ' \u25b2' : ''}</button>` : ''}
+    </div>`;
+
+        if (panelOpen && catSpecs.length) {
+          html += `<div class="mb-2 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 fade-in">`;
+          catSpecs.forEach(s => {
+            const isChecked = selectedSpecs.includes(s.name);
+            html += `<label class="flex items-center gap-1 bg-dark-600 rounded px-2 py-1 text-xs cursor-pointer hover:bg-dark-500 transition-colors">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleQuoteSpec('${escQ(cat)}','${escQ(s.name)}',this.checked)" class="accent-indigo-500">
+          <span>${s.name}</span>
+        </label>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `<div class="space-y-1.5">`;
+        companies.forEach(comp => {
+          const compProds = prods.filter(p => p.companyId === comp.id);
+          const selectedProdId = sel[comp.id] || '';
+          const selectedProd = selectedProdId ? compProds.find(p => p.id === selectedProdId) : null;
+          const qty = selectedProd ? getQuoteQty(selectedProd.id) : 1;
+          const unitPriceConverted = selectedProd ? convertPrice(selectedProd.price, selectedProd.currency, quoteDisplayCurrency) : 0;
+          const subtotal = unitPriceConverted * qty;
+          if (selectedProd) { catTotal += subtotal }
+
+          html += `<div class="bg-dark-700 rounded-lg p-3 flex items-center gap-3 flex-wrap">
+        <div class="flex-1 min-w-0"><span class="font-medium text-sm">\ud83c\udfe2 ${comp.name}</span>${selectedProd ? `<span class="text-xs text-green-400 ml-2">${formatConverted(selectedProd.price, selectedProd.currency)}</span>` : ''}</div>
+        <select onchange="setQuoteSelection('${escQ(cat)}','${comp.id}',this.value)" class="bg-dark-600 border border-dark-500 rounded-lg px-3 py-1.5 text-sm min-w-[220px]">
+          <option value="">\uc81c\ud488 \uc120\ud0dd</option>
+          ${compProds.map(p => { const lbl = formatQuoteOption(p, cat).replace(/"/g, '&quot;'); return `<option value="${p.id}" ${p.id === selectedProdId ? 'selected' : ''}>${lbl}</option>` }).join('')}
+        </select>`;
+          if (selectedProd) {
+            html += `<input type="number" min="1" value="${qty}" onchange="setQuoteQuantity('${selectedProd.id}',this.value)" class="bg-dark-600 border border-dark-500 rounded-lg px-2 py-1.5 text-sm w-16 text-center" title="\uc218\ub7c9">
+        <span class="text-xs text-dark-300 whitespace-nowrap">= ${formatPrice(subtotal, quoteDisplayCurrency)}</span>
+        <span class="text-xs text-white bg-green-600 px-2 py-0.5 rounded-full">\u2713</span>`;
+          }
+          html += `</div>`;
+        });
+        catSubtotals[cat] = catTotal;
+        grandTotal += catTotal;
+        // \uce74\ud14c\uace0\ub9ac \uc18c\uacc4
+        if (catTotal > 0) {
+          html += `<div class="text-right text-sm font-medium text-accent-light mt-1 pr-2">${cat} \uc18c\uacc4: ${formatPrice(catTotal, quoteDisplayCurrency)}</div>`;
+        }
+        html += `</div></div>`;
+      });
+      if (!html) html = '<p class="text-sm text-dark-400 text-center py-8">\ub4f1\ub85d\ub41c \uc81c\ud488\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</p>';
+      container.innerHTML = html;
+
+      // \ud569\uacc4 \ubc15\uc2a4
+      const totalsEl = document.getElementById('quoteTotals');
+      if (grandTotal > 0) {
+        let th = '<div class="mt-4 bg-dark-700 border border-dark-600 rounded-lg p-4 fade-in"><h3 class="text-sm font-bold mb-2">\ud83d\udcb0 \ud569\uacc4 (' + quoteDisplayCurrency + ')</h3><div class="space-y-1">';
+        Object.entries(catSubtotals).forEach(([cat, sub]) => {
+          if (sub > 0) th += `<div class="flex justify-between text-sm"><span class="text-dark-300">${cat}</span><span>${formatPrice(sub, quoteDisplayCurrency)}</span></div>`;
+        });
+        th += `</div><div class="border-t border-dark-500 mt-2 pt-2 flex justify-between text-base font-bold"><span>\uc804\uccb4 \ud569\uacc4</span><span class="text-green-400">${formatPrice(grandTotal, quoteDisplayCurrency)}</span></div></div>`;
+        totalsEl.innerHTML = th;
+      } else { totalsEl.innerHTML = ''; }
+    }
+    function setQuoteSelection(cat, compId, prodId) {
+      if (!data.quoteSelections[cat]) data.quoteSelections[cat] = {};
+      if (prodId) data.quoteSelections[cat][compId] = prodId;
+      else delete data.quoteSelections[cat][compId];
+      save(); renderQuoteBuilder();
+    }
+
+    /* ===================== EXCEL: COMPARE PREVIEW ===================== */
+    let excelExportMode = '';
+    let excelExportData = null;
+    let excelColumns = [];
+
+    function openCompareExcelPreview() {
+      const selected = Object.values(compareSelected).map(id => data.products.find(p => p.id === id)).filter(Boolean);
+      if (!selected.length) { showToast('비교할 제품을 먼저 선택하세요'); return }
+      excelExportMode = 'compare';
+      const specs = data.specs[currentCategory] || [];
+      const baseColumns = [{ key: 'price', name: '가격', checked: true }, { key: 'unit', name: '단위', checked: true }, { key: 'leadTime', name: '리드타임', checked: true }];
+      const specColumns = specs.map(s => ({ key: 'spec_' + s.name, name: s.name, checked: true }));
+      excelColumns = [...baseColumns, ...specColumns];
+      excelExportData = selected;
+      renderExcelPreview('비교 엑셀 미리보기');
+      openModal('modalExcelPreview');
+    }
+    function openQuoteExcelPreview() {
+      let hasAny = false;
+      const grouped = {};
+      data.categories.forEach(cat => {
+        const sel = data.quoteSelections[cat] || {};
+        Object.entries(sel).forEach(([compId, prodId]) => {
+          const prod = data.products.find(p => p.id === prodId);
+          const comp = getCompany(compId);
+          if (prod && comp) {
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push({ comp, prod });
+            hasAny = true;
+          }
+        });
+      });
+      if (!hasAny) { showToast('선택된 제품이 없습니다'); return }
+      excelExportMode = 'quote';
+      excelExportData = grouped;
+      // 공통 항목만 체크박스로 유지 (스펙은 카테고리별 자동 구성)
+      excelColumns = [
+        { key: 'company', name: '회사명', checked: true },
+        { key: 'product', name: '제품명', checked: true },
+        { key: 'price', name: '가격', checked: true },
+        { key: 'currency', name: '통화', checked: true },
+        { key: 'unit', name: '단위', checked: true },
+        { key: 'leadTime', name: '리드타임', checked: true }
+      ];
+      renderExcelPreview('견적 엑셀 미리보기');
+      openModal('modalExcelPreview');
+    }
+    function renderExcelPreview(title) {
+      document.getElementById('excelPreviewTitle').textContent = title;
+      // Controls: column checkboxes
+      let ctrl = '<div class="flex flex-wrap gap-2 mb-3">';
+      excelColumns.forEach((col, i) => {
+        ctrl += `<label class="flex items-center gap-1 bg-dark-700 rounded px-2 py-1 text-xs cursor-pointer"><input type="checkbox" ${col.checked ? 'checked' : ''} onchange="toggleExcelCol(${i},this.checked)" class="accent-indigo-500"><span>${col.name}</span></label>`;
+      });
+      ctrl += '</div><p class="text-xs text-dark-400 mb-2">※ 체크박스로 포함할 컬럼을 선택하세요</p>';
+      document.getElementById('excelPreviewControls').innerHTML = ctrl;
+
+      if (excelExportMode === 'compare') {
+        const activeCols = excelColumns.filter(c => c.checked);
+        let tbl = '<table class="preview-table"><thead><tr>';
+        activeCols.forEach(c => { tbl += `<th>${c.name}</th>` });
+        tbl += '</tr></thead><tbody>';
+        excelExportData.forEach(p => {
+          tbl += '<tr>';
+          activeCols.forEach(c => {
+            if (c.key === 'price') tbl += `<td>${p.price ? p.price + ' ' + p.currency : '-'}</td>`;
+            else if (c.key === 'unit') tbl += `<td>${p.unit || '-'}</td>`;
+            else if (c.key === 'leadTime') tbl += `<td>${p.leadTime || '-'}</td>`;
+            else if (c.key.startsWith('spec_')) { const sn = c.key.slice(5); tbl += `<td>${(p.specValues && p.specValues[sn]) || '-'}</td>` }
+          });
+          tbl += '</tr>';
+        });
+        tbl += '</tbody></table>';
+        document.getElementById('excelPreviewTable').innerHTML = tbl;
+      } else {
+        // 카테고리별 그룹핑 미리보기
+        const activeCols = excelColumns.filter(c => c.checked);
+        let tbl = '<table class="preview-table"><tbody>';
+        const cats = Object.keys(excelExportData);
+        let pvGrandTotal = 0;
+        cats.forEach((cat, catIdx) => {
+          const catSpecs = (data.specs[cat] || []).map(s => s.name);
+          const totalCols = activeCols.length + catSpecs.length + 2;
+          // 카테고리 헤더 행
+          tbl += `<tr><td colspan="${totalCols}" style="background:#4F46E5;color:#fff;font-weight:700;text-align:center;padding:8px;font-size:14px;">📁 ${cat}</td></tr>`;
+          // 컬럼 헤더 행
+          tbl += '<tr>';
+          activeCols.forEach(c => { tbl += `<th style="background:#374151;font-weight:600;">${c.name}</th>` });
+          catSpecs.forEach(s => { tbl += `<th style="background:#374151;font-weight:600;">${s}</th>` });
+          tbl += `<th style="background:#374151;font-weight:600;">수량</th><th style="background:#374151;font-weight:600;">소계(${quoteDisplayCurrency})</th>`;
+          tbl += '</tr>';
+          let catSub = 0;
+          // 데이터 행
+          excelExportData[cat].forEach(r => {
+            const qty = getQuoteQty(r.prod.id);
+            const converted = convertPrice(r.prod.price, r.prod.currency, quoteDisplayCurrency);
+            const sub = converted * qty;
+            catSub += sub;
+            tbl += '<tr>';
+            activeCols.forEach(c => {
+              if (c.key === 'company') tbl += `<td>${r.comp.name}</td>`;
+              else if (c.key === 'product') tbl += `<td>${r.prod.name}</td>`;
+              else if (c.key === 'price') tbl += `<td>${r.prod.price || '-'}</td>`;
+              else if (c.key === 'currency') tbl += `<td>${r.prod.currency || '-'}</td>`;
+              else if (c.key === 'unit') tbl += `<td>${r.prod.unit || '-'}</td>`;
+              else if (c.key === 'leadTime') tbl += `<td>${r.prod.leadTime || '-'}</td>`;
+            });
+            catSpecs.forEach(sn => { tbl += `<td>${(r.prod.specValues && r.prod.specValues[sn]) || '-'}</td>` });
+            tbl += `<td style="text-align:center">${qty}</td><td style="text-align:right">${formatPrice(sub, quoteDisplayCurrency)}</td>`;
+            tbl += '</tr>';
+          });
+          // 카테고리 소계 행
+          pvGrandTotal += catSub;
+          tbl += `<tr><td colspan="${totalCols - 1}" style="text-align:right;font-weight:600;background:#E0E7FF;color:#1e293b;">${cat} 소계</td><td style="text-align:right;font-weight:600;background:#E0E7FF;color:#1e293b;">${formatPrice(catSub, quoteDisplayCurrency)}</td></tr>`;
+          if (catIdx < cats.length - 1) {
+            tbl += `<tr><td colspan="${totalCols}" style="border:none;">&nbsp;</td></tr>`;
+          }
+        });
+        // 전체 합계
+        const maxTotalCols = Math.max(...cats.map(cat => { const cs = (data.specs[cat] || []).map(s => s.name); return activeCols.length + cs.length + 2 }));
+        tbl += `<tr><td colspan="${maxTotalCols}" style="border:none;">&nbsp;</td></tr>`;
+        tbl += `<tr><td colspan="${maxTotalCols - 1}" style="text-align:right;font-weight:700;background:#4F46E5;color:#fff;padding:8px;">전체 합계 (${quoteDisplayCurrency})</td><td style="text-align:right;font-weight:700;background:#4F46E5;color:#fff;padding:8px;">${formatPrice(pvGrandTotal, quoteDisplayCurrency)}</td></tr>`;
+        tbl += '</tbody></table>';
+        document.getElementById('excelPreviewTable').innerHTML = tbl;
+      }
+    }
+    function toggleExcelCol(idx, checked) { excelColumns[idx].checked = checked; renderExcelPreview(document.getElementById('excelPreviewTitle').textContent) }
+    function executeExcelExport() {
+      const activeCols = excelColumns.filter(c => c.checked);
+      const wb = XLSX.utils.book_new();
+      if (excelExportMode === 'compare') {
+        const rows = [activeCols.map(c => c.name)];
+        excelExportData.forEach(p => {
+          const row = [];
+          activeCols.forEach(c => {
+            if (c.key === 'price') row.push(p.price ? p.price + ' ' + p.currency : '-');
+            else if (c.key === 'unit') row.push(p.unit || '-');
+            else if (c.key === 'leadTime') row.push(p.leadTime || '-');
+            else if (c.key.startsWith('spec_')) row.push((p.specValues && p.specValues[c.key.slice(5)]) || '-');
+          });
+          rows.push(row);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = activeCols.map(() => ({ wch: 18 }));
+        XLSX.utils.book_append_sheet(wb, ws, '스펙비교');
+        XLSX.writeFile(wb, `스펙비교_${currentCategory}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      } else {
+        // 카테고리별 그룹핑 엑셀 내보내기
+        const cats = Object.keys(excelExportData);
+        const aoa = [];
+        const merges = [];
+        const styles = {};
+        let maxCols = 0;
+        let grandTotal = 0;
+
+        cats.forEach((cat, catIdx) => {
+          const catSpecs = (data.specs[cat] || []).map(s => s.name);
+          const totalCols = activeCols.length + catSpecs.length;
+          if (totalCols > maxCols) maxCols = totalCols;
+
+          // 카테고리 헤더 행
+          const catHeaderRow = new Array(totalCols).fill('');
+          catHeaderRow[0] = cat;
+          const catRowIdx = aoa.length;
+          aoa.push(catHeaderRow);
+          if (totalCols > 1) { merges.push({ s: { r: catRowIdx, c: 0 }, e: { r: catRowIdx, c: totalCols - 1 } }) }
+          // 스타일: 인디고 배경 + 흰색 굵은 텍스트
+          for (let ci = 0; ci < totalCols; ci++) {
+            const addr = XLSX.utils.encode_cell({ r: catRowIdx, c: ci });
+            styles[addr] = { font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 }, fill: { fgColor: { rgb: '4F46E5' } }, alignment: { horizontal: 'center', vertical: 'center' } };
+          }
+
+          // 컬럼 헤더 행
+          const colHeaderRow = [];
+          activeCols.forEach(c => colHeaderRow.push(c.name));
+          catSpecs.forEach(s => colHeaderRow.push(s));
+          const colRowIdx = aoa.length;
+          aoa.push(colHeaderRow);
+          // 스타일: 회색 배경 + 굵은 텍스트
+          for (let ci = 0; ci < totalCols; ci++) {
+            const addr = XLSX.utils.encode_cell({ r: colRowIdx, c: ci });
+            styles[addr] = { font: { bold: true }, fill: { fgColor: { rgb: 'D1D5DB' } }, alignment: { horizontal: 'center' } };
+          }
+
+          // 컴럼 헤더에 수량, 소계 추가
+          colHeaderRow.push('수량', '소계(' + quoteDisplayCurrency + ')');
+          const totalColsExt = totalCols + 2;
+          if (totalColsExt > maxCols) maxCols = totalColsExt;
+          // 카테고리 헤더 병합 수정
+          if (merges.length) { merges[merges.length - 1].e.c = totalColsExt - 1 }
+
+          let catSubtotal = 0;
+          // 데이터 행
+          excelExportData[cat].forEach(r => {
+            const row = [];
+            activeCols.forEach(c => {
+              if (c.key === 'company') row.push(r.comp.name);
+              else if (c.key === 'product') row.push(r.prod.name);
+              else if (c.key === 'price') row.push(r.prod.price || '');
+              else if (c.key === 'currency') row.push(r.prod.currency || '');
+              else if (c.key === 'unit') row.push(r.prod.unit || '');
+              else if (c.key === 'leadTime') row.push(r.prod.leadTime || '');
+            });
+            catSpecs.forEach(sn => { row.push((r.prod.specValues && r.prod.specValues[sn]) || '') });
+            const qty = getQuoteQty(r.prod.id);
+            const converted = convertPrice(r.prod.price, r.prod.currency, quoteDisplayCurrency);
+            const sub = converted * qty;
+            catSubtotal += sub;
+            row.push(qty);
+            row.push(Math.round(sub * 100) / 100);
+            aoa.push(row);
+          });
+
+          // 카테고리 소계 행
+          const subtotalRow = new Array(totalColsExt).fill('');
+          subtotalRow[totalColsExt - 2] = cat + ' 소계';
+          subtotalRow[totalColsExt - 1] = Math.round(catSubtotal * 100) / 100;
+          const subRowIdx = aoa.length;
+          aoa.push(subtotalRow);
+          for (let ci = 0; ci < totalColsExt; ci++) {
+            const addr = XLSX.utils.encode_cell({ r: subRowIdx, c: ci });
+            styles[addr] = { font: { bold: true }, fill: { fgColor: { rgb: 'E0E7FF' } }, alignment: { horizontal: ci >= totalColsExt - 2 ? 'right' : 'left' } };
+          }
+
+          grandTotal += catSubtotal;
+
+          // 카테고리 간 빈 행
+          if (catIdx < cats.length - 1) {
+            aoa.push(new Array(totalColsExt).fill(''));
+          }
+        });
+
+        // 전체 합계 행
+        aoa.push(new Array(maxCols).fill('')); // 빈 행
+        const totalRow = new Array(maxCols).fill('');
+        totalRow[maxCols - 2] = '전체 합계 (' + quoteDisplayCurrency + ')';
+        totalRow[maxCols - 1] = Math.round(grandTotal * 100) / 100;
+        const totalRowIdx = aoa.length;
+        aoa.push(totalRow);
+        for (let ci = 0; ci < maxCols; ci++) {
+          const addr = XLSX.utils.encode_cell({ r: totalRowIdx, c: ci });
+          styles[addr] = { font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '4F46E5' } }, alignment: { horizontal: ci >= maxCols - 2 ? 'right' : 'center' } };
+        }
+        if (maxCols > 1) { merges.push({ s: { r: totalRowIdx, c: 0 }, e: { r: totalRowIdx, c: maxCols - 3 } }) }
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!merges'] = merges;
+        ws['!cols'] = Array.from({ length: maxCols }, () => ({ wch: 16 }));
+        Object.entries(styles).forEach(([addr, style]) => {
+          if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+          ws[addr].s = style;
+        });
+        XLSX.utils.book_append_sheet(wb, ws, '최종견적');
+        XLSX.writeFile(wb, `최종견적_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      }
+      closeModal('modalExcelPreview'); showToast('엑셀 다운로드 완료');
+    }
+    /* ===================== EXCEL UPLOAD ===================== */
+    function openExcelUploadModal() { document.getElementById('uploadPreview').classList.add('hidden'); document.getElementById('excelUploadFile').value = ''; openModal('modalExcelUpload') }
+    function downloadUploadTemplate() {
+      const wb = XLSX.utils.book_new();
+      const catSpecs = (data.specs[currentCategory] || []).map(s => s.name);
+      const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임'];
+      catSpecs.forEach(s => headers.push(s));
+      const exampleRow = [currentCategory, '회사A', '제품X', '100', 'USD', '개', '7일'];
+      catSpecs.forEach(() => exampleRow.push(''));
+      const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+      ws['!cols'] = headers.map(() => ({ wch: 16 }));
+      XLSX.utils.book_append_sheet(wb, ws, currentCategory);
+      XLSX.writeFile(wb, `업로드_양식_${currentCategory}.xlsx`);
+      showToast(`${currentCategory} 양식 다운로드 완료`);
+    }
+    let uploadParsedData = [];
+    function handleExcelUpload(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          if (json.length < 2) { showToast('데이터가 없습니다'); return }
+          const headers = json[0];
+          const rows = json.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
+          uploadParsedData = rows.map(row => {
+            const obj = {};
+            headers.forEach((h, i) => { obj[h] = row[i] !== undefined ? String(row[i]) : '' });
+            return obj;
+          });
+          // Preview
+          const pv = document.getElementById('uploadPreview'); pv.classList.remove('hidden');
+          let tbl = '<table class="preview-table"><thead><tr>';
+          headers.forEach(h => { tbl += `<th>${h}</th>` });
+          tbl += '</tr></thead><tbody>';
+          uploadParsedData.slice(0, 20).forEach(row => {
+            tbl += '<tr>'; headers.forEach(h => { tbl += `<td>${row[h] || ''}</td>` }); tbl += '</tr>';
+          });
+          tbl += '</tbody></table>';
+          if (uploadParsedData.length > 20) tbl += `<p class="text-xs text-dark-400 mt-1">... 외 ${uploadParsedData.length - 20}건</p>`;
+          document.getElementById('uploadPreviewTable').innerHTML = tbl;
+          // Summary
+          let newCount = 0, updateCount = 0;
+          uploadParsedData.forEach(row => {
+            const catKey = row['카테고리'] || ''; const compName = row['회사명'] || ''; const prodName = row['제품명'] || '';
+            if (!catKey || !compName || !prodName) return;
+            const comp = getCatCompanies(catKey).find(c => c.name === compName);
+            if (!comp) { newCount++; return }
+            const existing = data.products.find(p => p.companyId === comp.id && p.category === catKey && p.name === prodName);
+            if (existing) {
+              const specs = data.specs[catKey] || [];
+              const specMatch = specs.every(s => { const sv = (existing.specValues && existing.specValues[s.name]) || ''; const rv = row[s.name] || ''; return sv === rv });
+              if (specMatch) updateCount++; else newCount++;
+            } else newCount++;
+          });
+          document.getElementById('uploadSummary').innerHTML = `<span class="text-green-400">신규 ${newCount}건</span> · <span class="text-yellow-400">업데이트 ${updateCount}건</span> · 총 ${uploadParsedData.length}건`;
+        } catch (err) { showToast('파일 읽기 오류: ' + err.message) }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    function confirmExcelUpload() {
+      let added = 0, updated = 0;
+      uploadParsedData.forEach(row => {
+        const catKey = row['카테고리'] || ''; const compName = row['회사명'] || ''; const prodName = row['제품명'] || '';
+        if (!catKey || !compName || !prodName) return;
+        // Ensure category exists
+        if (!data.categories.includes(catKey)) { data.categories.push(catKey); data.specs[catKey] = []; data.companies[catKey] = [] }
+        // Ensure company exists
+        if (!data.companies[catKey]) data.companies[catKey] = [];
+        let comp = data.companies[catKey].find(c => c.name === compName);
+        if (!comp) { comp = { id: uid(), name: compName, country: '', memo: '' }; data.companies[catKey].push(comp) }
+        // Gather spec values
+        const specValues = {};
+        const knownKeys = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임'];
+        Object.keys(row).forEach(k => { if (!knownKeys.includes(k) && row[k]) specValues[k] = row[k] });
+        // Check for spec items that need to be added to specs list
+        Object.keys(specValues).forEach(sn => {
+          if (!data.specs[catKey]) data.specs[catKey] = [];
+          if (!data.specs[catKey].find(s => s.name === sn)) { data.specs[catKey].push({ name: sn, type: 'text' }) }
+        });
+        // Find existing
+        const existing = data.products.find(p => p.companyId === comp.id && p.category === catKey && p.name === prodName);
+        if (existing) {
+          const specs = data.specs[catKey] || [];
+          const specMatch = specs.every(s => { const sv = (existing.specValues && existing.specValues[s.name]) || ''; const rv = specValues[s.name] || ''; return sv === rv });
+          if (specMatch) {
+            // Update price, currency, unit, leadTime only
+            existing.price = parseFloat(row['가격']) || existing.price;
+            existing.currency = row['통화(USD/KRW/CNY)'] || existing.currency;
+            existing.unit = row['단위'] || existing.unit;
+            existing.leadTime = row['리드타임'] || existing.leadTime;
+            updated++;
+          } else {
+            data.products.push({ id: uid(), companyId: comp.id, category: catKey, name: prodName, price: parseFloat(row['가격']) || 0, currency: row['통화(USD/KRW/CNY)'] || 'USD', unit: row['단위'] || '', leadTime: row['리드타임'] || '', specValues, memo: '' });
+            added++;
+          }
+        } else {
+          data.products.push({ id: uid(), companyId: comp.id, category: catKey, name: prodName, price: parseFloat(row['가격']) || 0, currency: row['통화(USD/KRW/CNY)'] || 'USD', unit: row['단위'] || '', leadTime: row['리드타임'] || '', specValues, memo: '' });
+          added++;
+        }
+      });
+      save(); closeModal('modalExcelUpload'); renderAll();
+      showToast(`업로드 완료: 신규 ${added}건, 업데이트 ${updated}건`);
+    }
+
+    /* ===================== EXCEL CATEGORY EXPORT ===================== */
+    function openCategoryExportModal() {
+      const container = document.getElementById('categoryExportCheckboxes');
+      if (!data.categories.length) {
+        container.innerHTML = '<p class="text-sm text-dark-400 text-center py-4">등록된 카테고리가 없습니다.</p>';
+      } else {
+        container.innerHTML = data.categories.map(cat => 
+          `<label class="flex items-center gap-2 cursor-pointer hover:bg-dark-600 p-2 rounded transition-colors"><input type="checkbox" value="${escQ(cat)}" class="cat-export-cb accent-indigo-500 w-4 h-4"><span class="text-sm font-medium text-dark-100">${cat}</span></label>`
+        ).join('');
+        toggleAllCategoryExport(true); // default to all selected
+      }
+      openModal('modalCategoryExport');
+    }
+
+    function toggleAllCategoryExport(checked) {
+      document.querySelectorAll('.cat-export-cb').forEach(cb => cb.checked = checked);
+    }
+
+    function executeCategoryExport() {
+      const selectedCats = Array.from(document.querySelectorAll('.cat-export-cb:checked')).map(cb => cb.value);
+      if (selectedCats.length === 0) {
+        showToast('내보낼 카테고리를 선택하세요');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      selectedCats.forEach(cat => {
+        const catSpecs = (data.specs[cat] || []).map(s => s.name);
+        const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임', ...catSpecs];
+        
+        const rows = [headers];
+        
+        const products = data.products.filter(p => p.category === cat);
+        if (products.length > 0) {
+          products.forEach(p => {
+            const comp = getCompany(p.companyId);
+            const row = [
+              p.category,
+              comp ? comp.name : '',
+              p.name,
+              p.price || '',
+              p.currency || '',
+              p.unit || '',
+              p.leadTime || ''
+            ];
+            catSpecs.forEach(sn => {
+              row.push((p.specValues && p.specValues[sn]) || '');
+            });
+            rows.push(row);
+          });
+        }
+        
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = headers.map(() => ({ wch: 16 }));
+        
+        // Handle sheet name length limits (max 31 chars for Excel sheet names) and invalid chars
+        let sheetName = cat.replace(/[\/?*[\]:]/g, '_').substring(0, 31);
+        if (!sheetName) sheetName = 'Sheet';
+        let finalSheetName = sheetName;
+        let counter = 1;
+        while (wb.SheetNames.includes(finalSheetName)) {
+            finalSheetName = `${sheetName.substring(0, 28)}_${counter++}`;
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
+      });
+
+      const fileName = `내보내기_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      closeModal('modalCategoryExport');
+      showToast('데이터 내보내기 완료');
+    }
+
+    /* ===================== JSON EXPORT/IMPORT ===================== */
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
+      a.download = `가격비교_백업_${new Date().toISOString().slice(0, 10)}.json`; a.click();
+      URL.revokeObjectURL(url); showToast('백업 다운로드 완료');
+    }
+    function importJSON(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported.categories || !imported.specs) { showToast('유효하지 않은 파일'); return }
+          if (!confirm('현재 데이터를 덮어쓰시겠습니까?')) return;
+          data = imported;
+          if (!data.companies) {
+            data.companies = {};
+            data.categories.forEach(cat => data.companies[cat] = []);
+          }
+          if (!data.products) data.products = [];
+          if (!data.quoteSelections) data.quoteSelections = {};
+          save(); currentCategory = data.categories[0] || ''; selectedCompanyId = null; selectedProductId = null;
+          renderAll(); showToast('데이터 복원 완료');
+        } catch (err) { showToast('JSON 파싱 오류') }
+      };
+      reader.readAsText(file); event.target.value = '';
+    }
+
+    /* ===================== INIT ===================== */
+    function renderAll() {
+      renderCategoryTabs(); switchSubTab(currentSubTab); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder();
+    }
+    
+    let _appLoaded = false;
+    async function initAuth() {
+      const safeLoadAndInitialize = async () => {
+        try {
+          await load();
+        } catch (e) {
+          console.error('[initAuth] 데이터 로드 실패. 초기값으로 폴백합니다.', e);
+          initDefaultData();
+          save();
+        }
+        initModals(); loadQuoteSpecDisplay(); loadCompareSpecDisplay(); loadExchangeRates();
+        currentCategory = data.categories[0] || '';
+        renderAll();
+        _appLoaded = true;
+      };
+
+      // 1. 페이지 로드 시 세션 먼저 확인 후 화면 초기화
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appWrapper').style.display = 'block';
+        if (!_appLoaded) {
+          await safeLoadAndInitialize();
+        }
+      } else {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appWrapper').style.display = 'none';
+      }
+
+      // 2. 이벤트 등록 (SIGNED_IN, SIGNED_OUT 명확히 분기)
+      sb.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN') {
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('appWrapper').style.display = 'block';
+          if (!_appLoaded) {
+            await safeLoadAndInitialize();
+          }
+        } else if (event === 'SIGNED_OUT') {
+          document.getElementById('loginScreen').style.display = 'flex';
+          document.getElementById('appWrapper').style.display = 'none';
+          _appLoaded = false;
+          data = { categories: [], specs: {}, companies: {}, products: [], quoteSelections: {} };
+          if(window.syncTimeout) clearTimeout(window.syncTimeout);
+        }
+      });
+    }
+
+    initAuth();
+  </script>
+</body>
+
+</html>
