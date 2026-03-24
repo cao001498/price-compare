@@ -289,6 +289,7 @@
         <h1
           class="text-lg font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent whitespace-nowrap">
           가격비교</h1>
+        <span id="headerUsername" class="text-xs font-medium text-dark-300 bg-dark-700/50 px-2 py-0.5 rounded-md hidden ml-1"></span>
       </div>
       <div class="flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
         <button onclick="openManageModal('category')"
@@ -1731,12 +1732,17 @@
       if (session) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appWrapper').style.display = 'block';
+        if (session.user && session.user.email) {
+          document.getElementById('headerUsername').textContent = session.user.email.split('@')[0];
+          document.getElementById('headerUsername').classList.remove('hidden');
+        }
         if (!_appLoaded) {
           await safeLoadAndInitialize();
         }
       } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appWrapper').style.display = 'none';
+        document.getElementById('headerUsername').classList.add('hidden');
       }
 
       // 2. 이벤트 등록 (SIGNED_IN, SIGNED_OUT 명확히 분기)
@@ -1744,12 +1750,17 @@
         if (event === 'SIGNED_IN') {
           document.getElementById('loginScreen').style.display = 'none';
           document.getElementById('appWrapper').style.display = 'block';
+          if (session && session.user && session.user.email) {
+            document.getElementById('headerUsername').textContent = session.user.email.split('@')[0];
+            document.getElementById('headerUsername').classList.remove('hidden');
+          }
           if (!_appLoaded) {
             await safeLoadAndInitialize();
           }
         } else if (event === 'SIGNED_OUT') {
           document.getElementById('loginScreen').style.display = 'flex';
           document.getElementById('appWrapper').style.display = 'none';
+          document.getElementById('headerUsername').classList.add('hidden');
           _appLoaded = false;
           data = { categories: [], specs: {}, companies: {}, products: [], quoteSelections: {} };
           if(window.syncTimeout) clearTimeout(window.syncTimeout);
