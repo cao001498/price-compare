@@ -701,7 +701,7 @@
 
   <div id="modalCategoryExport" class="modal-overlay" onclick="if(event.target===this)closeModal('modalCategoryExport')"><div class="modal-box">
     <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">데이터 엑셀 내보내기</h3><button onclick="closeModal('modalCategoryExport')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
-    <p class="text-sm text-dark-300 mb-3">내보낼 카테고리를 선택하세요:</p>
+    <p class="text-sm text-dark-300 mb-3">내보낼 회사를 선택하세요:</p>
     <div class="mb-3 flex gap-2">
       <button onclick="toggleAllCategoryExport(true)" class="btn-secondary text-xs px-3 py-1.5 rounded font-medium">전체 선택</button>
       <button onclick="toggleAllCategoryExport(false)" class="btn-secondary text-xs px-3 py-1.5 rounded font-medium">전체 해제</button>
@@ -1604,74 +1604,134 @@
     }
 
     /* ===================== EXCEL CATEGORY EXPORT ===================== */
+    function toggleExpGroup(catId, event) {
+      if (event && event.target.tagName === 'INPUT') return;
+      const content = document.getElementById('content_' + catId);
+      const icon = document.getElementById('icon_' + catId);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        if (icon) icon.textContent = '▼';
+      } else {
+        content.classList.add('hidden');
+        if (icon) icon.textContent = '▶';
+      }
+    }
+
+    function toggleCategoryGroup(catId, checked) {
+      document.querySelectorAll(`.comp-export-cb[data-catid="${catId}"]`).forEach(cb => cb.checked = checked);
+    }
+    
+    function updateCatGroupStatus(catId) {
+      const cbs = document.querySelectorAll(`.comp-export-cb[data-catid="${catId}"]`);
+      const groupCb = document.querySelector(`.cat-group-cb[data-catid="${catId}"]`);
+      if (groupCb && cbs.length) {
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        const someChecked = Array.from(cbs).some(cb => cb.checked);
+        groupCb.checked = allChecked;
+        groupCb.indeterminate = someChecked && !allChecked;
+      }
+    }
+
     function openCategoryExportModal() {
       const container = document.getElementById('categoryExportCheckboxes');
       if (!data.categories.length) {
         container.innerHTML = '<p class="text-sm text-dark-400 text-center py-4">등록된 카테고리가 없습니다.</p>';
       } else {
-        container.innerHTML = data.categories.map(cat => 
-          `<label class="flex items-center gap-2 cursor-pointer hover:bg-dark-600 p-2 rounded transition-colors"><input type="checkbox" value="${escQ(cat)}" class="cat-export-cb accent-indigo-500 w-4 h-4"><span class="text-sm font-medium text-dark-100">${cat}</span></label>`
-        ).join('');
-        toggleAllCategoryExport(true); // default to all selected
+        let html = '';
+        data.categories.forEach((cat, idx) => {
+          const comps = data.companies[cat] || [];
+          if (comps.length === 0) return;
+          const catId = 'cat_exp_' + idx;
+          html += `
+          <div class="mb-2 bg-dark-700/50 rounded-lg border border-dark-600">
+            <div class="cursor-pointer p-2 text-sm font-medium hover:bg-dark-600 transition-colors flex items-center gap-2 select-none" onclick="toggleExpGroup('${catId}', event)">
+              <span class="text-xs text-dark-400 w-4 text-center toggle-icon" id="icon_${catId}">▶</span>
+              <input type="checkbox" class="cat-group-cb accent-indigo-500 w-4 h-4" data-catid="${catId}" onchange="toggleCategoryGroup('${catId}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();">
+              <span class="text-dark-100 flex-1">${cat}</span>
+            </div>
+            <div id="content_${catId}" class="hidden p-2 pt-0 pl-10 space-y-1 border-t border-dark-600/50 mt-1">
+              ${comps.map(c => `
+                <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-dark-600 transition-colors">
+                  <input type="checkbox" value="${c.id}" data-cat="${escQ(cat)}" data-catid="${catId}" class="comp-export-cb accent-indigo-500 w-4 h-4" onchange="updateCatGroupStatus('${catId}')">
+                  <span class="text-sm text-dark-200">${c.name}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>`;
+        });
+        if (!html) {
+          html = '<p class="text-sm text-dark-400 text-center py-4">등록된 회사가 없습니다.</p>';
+        }
+        container.innerHTML = html;
+        toggleAllCategoryExport(true);
       }
       openModal('modalCategoryExport');
     }
 
     function toggleAllCategoryExport(checked) {
-      document.querySelectorAll('.cat-export-cb').forEach(cb => cb.checked = checked);
+      document.querySelectorAll('.comp-export-cb').forEach(cb => cb.checked = checked);
+      document.querySelectorAll('.cat-group-cb').forEach(cb => {
+        cb.checked = checked;
+        cb.indeterminate = false;
+      });
     }
 
     function executeCategoryExport() {
-      const selectedCats = Array.from(document.querySelectorAll('.cat-export-cb:checked')).map(cb => cb.value);
-      if (selectedCats.length === 0) {
-        showToast('내보낼 카테고리를 선택하세요');
+      const selectedComps = Array.from(document.querySelectorAll('.comp-export-cb:checked')).map(cb => ({
+        compId: cb.value,
+        cat: cb.getAttribute('data-cat')
+      }));
+      
+      if (selectedComps.length === 0) {
+        showToast('내보낼 회사를 선택하세요');
         return;
       }
 
-      const wb = XLSX.utils.book_new();
+      const exportProducts = [];
+      selectedComps.forEach(sc => {
+        const prods = data.products.filter(p => p.category === sc.cat && p.companyId === sc.compId);
+        exportProducts.push(...prods);
+      });
+      
+      if (exportProducts.length === 0) {
+          showToast('선택한 회사의 제품이 없습니다');
+          return;
+      }
 
-      selectedCats.forEach(cat => {
-        const catSpecs = (data.specs[cat] || []).map(s => s.name);
-        const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임', ...catSpecs];
-        
-        const rows = [headers];
-        
-        const products = data.products.filter(p => p.category === cat);
-        if (products.length > 0) {
-          products.forEach(p => {
-            const comp = getCompany(p.companyId);
-            const row = [
-              p.category,
-              comp ? comp.name : '',
-              p.name,
-              p.price || '',
-              p.currency || '',
-              p.unit || '',
-              p.leadTime || ''
-            ];
-            catSpecs.forEach(sn => {
-              row.push((p.specValues && p.specValues[sn]) || '');
-            });
-            rows.push(row);
-          });
-        }
-        
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        ws['!cols'] = headers.map(() => ({ wch: 16 }));
-        
-        // Handle sheet name length limits (max 31 chars for Excel sheet names) and invalid chars
-        let sheetName = cat.replace(/[\/?*[\]:]/g, '_').substring(0, 31);
-        if (!sheetName) sheetName = 'Sheet';
-        let finalSheetName = sheetName;
-        let counter = 1;
-        while (wb.SheetNames.includes(finalSheetName)) {
-            finalSheetName = `${sheetName.substring(0, 28)}_${counter++}`;
-        }
+      const uniqueSpecs = new Set();
+      selectedComps.forEach(sc => {
+         const specs = data.specs[sc.cat] || [];
+         specs.forEach(s => uniqueSpecs.add(s.name));
+      });
+      const specArray = Array.from(uniqueSpecs);
+      
+      const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임', ...specArray];
+      const rows = [headers];
 
-        XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
+      exportProducts.forEach(p => {
+        const comp = getCompany(p.companyId);
+        const row = [
+          p.category,
+          comp ? comp.name : '',
+          p.name,
+          p.price === 0 || p.price ? p.price : '',
+          p.currency || '',
+          p.unit || '',
+          p.leadTime || ''
+        ];
+        specArray.forEach(sn => {
+          row.push((p.specValues && p.specValues[sn]) || '');
+        });
+        rows.push(row);
       });
 
-      const fileName = `내보내기_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = headers.map(() => ({ wch: 16 }));
+      
+      XLSX.utils.book_append_sheet(wb, ws, '제품목록');
+
+      const fileName = `제품내보내기_${new Date().toISOString().slice(0, 10)}.xlsx`;
       XLSX.writeFile(wb, fileName);
       closeModal('modalCategoryExport');
       showToast('데이터 내보내기 완료');
