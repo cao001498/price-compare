@@ -309,7 +309,8 @@
           <button id="btnUserManage" onclick="openUserManageModal()"
             class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium hidden">👥 유저 관리</button>
           <button id="btnDeleteLogs" onclick="openDeleteLogsModal()"
-            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium hidden">🗑️ 삭제 이력</button>
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium hidden">🗑️ 삭제
+            이력</button>
           <div class="w-px h-6 bg-dark-600 mx-0.5 hidden md:block" id="adminDivider" style="display:none"></div>
           <button onclick="openSearchModal()"
             class="bg-accent/80 hover:bg-accent text-white text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium transition-colors border border-accent/40 shadow-sm shadow-accent/20">🔍
@@ -487,10 +488,12 @@
       window.syncTimeout = setTimeout(async () => {
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
-        await sb.from('shared_data').upsert(
-          { id: 'shared', payload: data, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
+        const { data: existing } = await sb.from('shared_data').select('id').limit(1).maybeSingle();
+        if (existing) {
+          await sb.from('shared_data').update({ payload: data, updated_at: new Date().toISOString() }).eq('id', existing.id);
+        } else {
+          await sb.from('shared_data').insert({ payload: data, updated_at: new Date().toISOString() });
+        }
       }, 500);
     }
 
@@ -555,7 +558,7 @@
         throw new Error('User not found');
       }
 
-      const { data: resData, error } = await sb.from('shared_data').select('payload').eq('id', 'shared').maybeSingle();
+      const { data: resData, error } = await sb.from('shared_data').select('payload').limit(1).maybeSingle();
 
       if (error) {
         console.error('[load] 에러: 테이블 조회 실패', error);
@@ -603,7 +606,7 @@
         const adminChecked = p.is_admin ? 'checked' : '';
         return `<div class="flex items-center gap-2 bg-dark-700 rounded-lg px-3 py-2 mb-2">
           <div class="flex-1">
-            <div class="text-xs text-dark-400 truncate" title="${p.id}">${p.id.slice(0,8)}...</div>
+            <div class="text-xs text-dark-400 truncate" title="${p.id}">${p.id.slice(0, 8)}...</div>
             <input type="text" value="${nick}" placeholder="닉네임 입력" data-profile-id="${p.id}" class="profile-nick-input bg-dark-600 border border-dark-500 rounded px-2 py-1 text-sm w-full mt-1">
           </div>
           <label class="flex items-center gap-1 text-xs whitespace-nowrap cursor-pointer">
@@ -639,7 +642,19 @@
 
     /* ===================== DELETE LOGS ===================== */
     async function logDeletion(itemType, itemName) {
-      const deletedBy = getUserDisplayName();
+      let deletedBy = currentUserEmail.split('@')[0] || 'unknown';
+      try {
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          const emailPrefix = (user.email || '').split('@')[0];
+          const { data: profile } = await sb.from('profiles').select('nickname').eq('id', user.id).maybeSingle();
+          if (profile && profile.nickname) {
+            deletedBy = `${profile.nickname}(${emailPrefix})`;
+          } else {
+            deletedBy = emailPrefix;
+          }
+        }
+      } catch (e) { console.error('logDeletion profile fetch error:', e); }
       await sb.from('delete_logs').insert({
         item_type: itemType,
         item_name: itemName,
