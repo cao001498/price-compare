@@ -255,19 +255,32 @@
 
   <!-- Login Screen -->
   <div id="loginScreen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-    <div class="login-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; width: 100%; max-width: 400px;">
+    <div class="login-card"
+      style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; width: 100%; max-width: 400px;">
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center mx-auto mb-3">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <div
+          class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center mx-auto mb-3">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
         </div>
-        <h1 class="text-xl font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent">가격비교 시스템</h1>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent">가격비교
+          시스템</h1>
         <p class="text-dark-400 text-sm mt-1">로그인하여 시작하세요</p>
       </div>
       <div class="space-y-3">
-        <div><label class="text-sm text-dark-300 block mb-1">이메일</label><input id="loginEmail" type="email" placeholder="email@example.com" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;"></div>
-        <div><label class="text-sm text-dark-300 block mb-1">비밀번호</label><input id="loginPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;"></div>
+        <div><label class="text-sm text-dark-300 block mb-1">이메일</label><input id="loginEmail" type="email"
+            placeholder="email@example.com"
+            style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;">
+        </div>
+        <div><label class="text-sm text-dark-300 block mb-1">비밀번호</label><input id="loginPassword" type="password"
+            placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
+            style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #e2e8f0;">
+        </div>
         <div id="loginError" class="text-red-400 text-xs" style="display:none"></div>
-        <button onclick="doLogin()" id="loginBtn" class="btn-primary w-full py-2 rounded-lg font-medium text-sm">로그인</button>
+        <button onclick="doLogin()" id="loginBtn"
+          class="btn-primary w-full py-2 rounded-lg font-medium text-sm">로그인</button>
       </div>
     </div>
   </div>
@@ -275,150 +288,171 @@
   <!-- App Screen -->
   <div id="appWrapper" style="display: none;">
 
-  <!-- Header -->
-  <header class="bg-dark-900/80 backdrop-blur-md border-b border-dark-600 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div
-          class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <h1
-          class="text-lg font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent whitespace-nowrap">
-          가격비교</h1>
-        <span id="headerUsername" class="text-xs font-medium text-dark-300 bg-dark-700/50 px-2 py-0.5 rounded-md hidden ml-1"></span>
-      </div>
-      <div class="flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
-        <button onclick="openManageModal('category')"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">⚙️ 카테고리</button>
-        <button onclick="openManageModal('spec')"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📋 스펙</button>
-        <button onclick="openManageModal('company')"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">🏢 회사</button>
-        <button onclick="openExchangeRateModal()"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💱 환율</button>
-        <div class="w-px h-6 bg-dark-600 mx-0.5 hidden md:block"></div>
-        <button onclick="openExcelUploadModal()"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📤 엑셀 업로드</button>
-        <button onclick="openCategoryExportModal()"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📥 내보내기</button>
-        <button onclick="exportJSON()"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💾 백업</button>
-        <button onclick="document.getElementById('importJSON').click()"
-          class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📂 복원</button>
-        <input type="file" id="importJSON" accept=".json" class="hidden" onchange="importJSON(event)">
-        <button onclick="doLogout()" class="text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium bg-red-900/50 hover:bg-red-800 text-red-300 ml-2 border border-red-800 transition-colors">🚪 로그아웃</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Category Tabs -->
-  <nav id="categoryTabs" class="bg-dark-900/50 border-b border-dark-600">
-    <div class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto"></div>
-  </nav>
-
-  <!-- Sub Tabs -->
-  <nav id="subTabs" class="bg-dark-800 border-b border-dark-700">
-    <div class="max-w-7xl mx-auto px-4 py-0 flex gap-4">
-      <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('company')"
-        data-subtab="company">🏢 회사별</button>
-      <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('compare')"
-        data-subtab="compare">📊 스펙 비교</button>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-4 md:py-6">
-    <!-- Company Tab Content -->
-    <div id="companyTabContent">
-      <div class="flex gap-6" id="mainLayout">
-        <div class="w-full lg:w-1/4" id="companyListPanel">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-base font-semibold" id="companyListTitle">회사 목록</h2>
+    <!-- Header -->
+    <header class="bg-dark-900/80 backdrop-blur-md border-b border-dark-600 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-dim flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
           </div>
-          <div id="companyList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
-          <div id="emptyCompanyMsg" class="text-center py-12 text-dark-400 hidden">
-            <div class="text-3xl mb-2">🏢</div>
-            <p class="text-sm">등록된 회사가 없습니다</p>
-          </div>
+          <h1
+            class="text-lg font-bold bg-gradient-to-r from-accent-light to-accent bg-clip-text text-transparent whitespace-nowrap">
+            가격비교</h1>
+          <span id="headerUsername"
+            class="text-xs font-medium text-dark-300 bg-dark-700/50 px-2 py-0.5 rounded-md hidden ml-1"></span>
         </div>
-        <div class="w-full lg:w-1/4" id="productListPanel">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-base font-semibold" id="productListTitle">제품 목록</h2>
-            <div class="flex items-center gap-1.5">
-              <button onclick="toggleCompanySpecPanel()" id="companySpecToggleBtn" class="text-xs px-2 py-1.5 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500 hidden" title="스펙 표시 설정">⚙️</button>
-              <button onclick="openProductModal()" class="btn-primary text-xs px-2.5 py-1.5 rounded-lg font-medium">+ 제품</button>
+        <div class="flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
+          <button id="btnUserManage" onclick="openUserManageModal()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium hidden">👥 유저 관리</button>
+          <button id="btnDeleteLogs" onclick="openDeleteLogsModal()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium hidden">🗑️ 삭제 이력</button>
+          <div class="w-px h-6 bg-dark-600 mx-0.5 hidden md:block" id="adminDivider" style="display:none"></div>
+          <button onclick="openSearchModal()"
+            class="bg-accent/80 hover:bg-accent text-white text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium transition-colors border border-accent/40 shadow-sm shadow-accent/20">🔍
+            검색</button>
+          <button onclick="openManageModal('category')"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">⚙️ 카테고리</button>
+          <button onclick="openManageModal('spec')"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📋 스펙</button>
+          <button onclick="openManageModal('company')"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">🏢 회사</button>
+          <button onclick="openExchangeRateModal()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💱 환율</button>
+          <div class="w-px h-6 bg-dark-600 mx-0.5 hidden md:block"></div>
+          <button onclick="openExcelUploadModal()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📤 엑셀 업로드</button>
+          <button onclick="openCategoryExportModal()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📥 내보내기</button>
+          <button onclick="exportJSON()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">💾 백업</button>
+          <button onclick="document.getElementById('importJSON').click()"
+            class="btn-secondary text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium">📂 복원</button>
+          <input type="file" id="importJSON" accept=".json" class="hidden" onchange="importJSON(event)">
+          <button onclick="doLogout()"
+            class="text-xs md:text-sm px-2 md:px-3 py-1.5 rounded-lg font-medium bg-red-900/50 hover:bg-red-800 text-red-300 ml-2 border border-red-800 transition-colors">🚪
+            로그아웃</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <nav id="categoryTabs" class="bg-dark-900/50 border-b border-dark-600">
+      <div class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto"></div>
+    </nav>
+
+    <!-- Sub Tabs -->
+    <nav id="subTabs" class="bg-dark-800 border-b border-dark-700">
+      <div class="max-w-7xl mx-auto px-4 py-0 flex gap-4">
+        <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('company')"
+          data-subtab="company">🏢 회사별</button>
+        <button class="sub-tab-btn py-2 px-1 text-sm font-medium text-dark-300" onclick="switchSubTab('compare')"
+          data-subtab="compare">📊 스펙 비교</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-4 md:py-6">
+      <!-- Company Tab Content -->
+      <div id="companyTabContent">
+        <div class="flex gap-6" id="mainLayout">
+          <div class="w-full lg:w-1/4" id="companyListPanel">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-base font-semibold" id="companyListTitle">회사 목록</h2>
+            </div>
+            <div id="companyList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
+            <div id="emptyCompanyMsg" class="text-center py-12 text-dark-400 hidden">
+              <div class="text-3xl mb-2">🏢</div>
+              <p class="text-sm">등록된 회사가 없습니다</p>
             </div>
           </div>
-          <div id="companySpecPanel" class="mb-3 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in"></div>
-          <div id="productList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
-          <div id="emptyProductMsg" class="text-center py-12 text-dark-400 hidden">
-            <div class="text-3xl mb-2">📦</div>
-            <p class="text-sm">회사를 선택하세요</p>
+          <div class="w-full lg:w-1/4" id="productListPanel">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-base font-semibold" id="productListTitle">제품 목록</h2>
+              <div class="flex items-center gap-1.5">
+                <button onclick="toggleCompanySpecPanel()" id="companySpecToggleBtn"
+                  class="text-xs px-2 py-1.5 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500 hidden"
+                  title="스펙 표시 설정">⚙️</button>
+                <button onclick="openProductModal()" class="btn-primary text-xs px-2.5 py-1.5 rounded-lg font-medium">+
+                  제품</button>
+              </div>
+            </div>
+            <div id="companySpecPanel"
+              class="mb-3 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in">
+            </div>
+            <div id="productList" class="space-y-1.5" style="max-height:60vh;overflow-y:auto"></div>
+            <div id="emptyProductMsg" class="text-center py-12 text-dark-400 hidden">
+              <div class="text-3xl mb-2">📦</div>
+              <p class="text-sm">회사를 선택하세요</p>
+            </div>
+          </div>
+          <div class="hidden lg:block w-full lg:w-1/2" id="detailPanel">
+            <div id="productDetail" class="fade-in"></div>
+            <div id="emptyDetailMsg" class="text-center py-20 text-dark-400">
+              <div class="text-4xl mb-3">👈</div>
+              <p>제품을 선택하세요</p>
+              <p class="text-sm mt-1">스펙 및 가격 정보가 표시됩니다</p>
+            </div>
           </div>
         </div>
-        <div class="hidden lg:block w-full lg:w-1/2" id="detailPanel">
-          <div id="productDetail" class="fade-in"></div>
-          <div id="emptyDetailMsg" class="text-center py-20 text-dark-400">
-            <div class="text-4xl mb-3">👈</div>
-            <p>제품을 선택하세요</p>
-            <p class="text-sm mt-1">스펙 및 가격 정보가 표시됩니다</p>
+      </div>
+
+      <!-- Compare Tab Content -->
+      <div id="compareTabContent" class="hidden">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <h2 class="text-base font-semibold">📊 스펙 비교</h2>
+            <select id="compareDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
+              class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
+              <option value="KRW">KRW (원)</option>
+              <option value="USD">USD ($)</option>
+              <option value="CNY">CNY (¥)</option>
+            </select>
+            <button onclick="toggleCompareSpecPanel()" id="compareSpecToggleBtn"
+              class="text-xs px-2 py-1 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500">⚙️
+              표시 스펙 설정 ▼</button>
           </div>
+          <button onclick="openCompareExcelPreview()" class="btn-primary text-xs px-3 py-1.5 rounded-lg font-medium">📥
+            비교 엑셀 내보내기</button>
         </div>
+        <div id="compareSpecPanel"
+          class="mb-4 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in"></div>
+        <div id="compareCheckboxes" class="mb-4 flex flex-wrap gap-2"></div>
+        <div id="compareTableWrap" class="overflow-x-auto"></div>
+      </div>
+
+      <!-- Quote Builder Section -->
+      <div class="mt-6 border-t border-dark-600 pt-4" id="quoteSection">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-3">
+            <h2 class="text-base font-semibold">📑 최종 견적</h2>
+            <select id="quoteDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
+              class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
+              <option value="KRW">KRW (원)</option>
+              <option value="USD">USD ($)</option>
+              <option value="CNY">CNY (¥)</option>
+            </select>
+          </div>
+          <button onclick="openQuoteExcelPreview()" class="btn-primary text-xs px-3 py-2 rounded-lg font-medium">📊 견적
+            엑셀
+            내보내기</button>
+        </div>
+        <div id="quoteBuilder" class="space-y-4"></div>
+        <div id="quoteTotals"></div>
+      </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[999] hidden">
+      <div class="bg-accent rounded-lg px-4 py-2 text-white text-sm font-medium shadow-lg shadow-accent/30 fade-in">
       </div>
     </div>
 
-    <!-- Compare Tab Content -->
-    <div id="compareTabContent" class="hidden">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-3">
-          <h2 class="text-base font-semibold">📊 스펙 비교</h2>
-          <select id="compareDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
-            class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
-            <option value="KRW">KRW (원)</option>
-            <option value="USD">USD ($)</option>
-            <option value="CNY">CNY (¥)</option>
-          </select>
-          <button onclick="toggleCompareSpecPanel()" id="compareSpecToggleBtn"
-            class="text-xs px-2 py-1 rounded-lg font-medium transition-all bg-dark-600 text-dark-300 hover:bg-dark-500">⚙️ 표시 스펙 설정 ▼</button>
-        </div>
-        <button onclick="openCompareExcelPreview()" class="btn-primary text-xs px-3 py-1.5 rounded-lg font-medium">📥 비교 엑셀 내보내기</button>
-      </div>
-      <div id="compareSpecPanel" class="mb-4 p-2.5 bg-dark-700/60 border border-dark-600 rounded-lg flex flex-wrap gap-2 hidden fade-in"></div>
-      <div id="compareCheckboxes" class="mb-4 flex flex-wrap gap-2"></div>
-      <div id="compareTableWrap" class="overflow-x-auto"></div>
-    </div>
-
-    <!-- Quote Builder Section -->
-    <div class="mt-6 border-t border-dark-600 pt-4" id="quoteSection">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
-        <div class="flex items-center gap-3">
-          <h2 class="text-base font-semibold">📑 최종 견적</h2>
-          <select id="quoteDisplayCurrency" onchange="setQuoteDisplayCurrency(this.value)"
-            class="bg-dark-700 border border-dark-600 rounded-lg px-2 py-1 text-xs font-medium">
-            <option value="KRW">KRW (원)</option>
-            <option value="USD">USD ($)</option>
-            <option value="CNY">CNY (¥)</option>
-          </select>
-        </div>
-        <button onclick="openQuoteExcelPreview()" class="btn-primary text-xs px-3 py-2 rounded-lg font-medium">📊 견적 엑셀
-          내보내기</button>
-      </div>
-      <div id="quoteBuilder" class="space-y-4"></div>
-      <div id="quoteTotals"></div>
-    </div>
-  </main>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 z-[999] hidden">
-    <div class="bg-accent rounded-lg px-4 py-2 text-white text-sm font-medium shadow-lg shadow-accent/30 fade-in"></div>
-  </div>
-
-  <!-- MODALS will be generated dynamically -->
-  <div id="modalContainer"></div>
+    <!-- MODALS will be generated dynamically -->
+    <div id="modalContainer"></div>
   </div> <!-- End appWrapper -->
 
   <script>
@@ -437,33 +471,51 @@
     let currentSubTab = 'company';
     let selectedCompanyId = null;
     let selectedProductId = null;
+    let currentUserProfile = { nickname: null, is_admin: false };
+    let currentUserEmail = '';
 
     function uid() { return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8) }
     function getCompany(id) { for (const cat of Object.keys(data.companies)) { const c = (data.companies[cat] || []).find(x => x.id === id); if (c) return c } return null }
+    function getUserDisplayName() {
+      const emailPrefix = currentUserEmail.split('@')[0];
+      if (currentUserProfile.nickname) return `${currentUserProfile.nickname}(${emailPrefix})`;
+      return emailPrefix;
+    }
     function getCatCompanies(cat) { return data.companies[cat] || [] }
     function save() {
-      if(window.syncTimeout) clearTimeout(window.syncTimeout);
+      if (window.syncTimeout) clearTimeout(window.syncTimeout);
       window.syncTimeout = setTimeout(async () => {
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
-        await sb.from('user_data').upsert(
-          { user_id: user.id, payload: data, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id' }
+        await sb.from('shared_data').upsert(
+          { id: 'shared', payload: data, updated_at: new Date().toISOString() },
+          { onConflict: 'id' }
         );
       }, 500);
     }
 
     /* ===================== SUPABASE SQL =====================
-    -- user_data 테이블 생성 및 RLS
-    create table user_data (
-      id uuid default gen_random_uuid() primary key,
-      user_id uuid references auth.users(id) on delete cascade unique,
+    -- shared_data 테이블 (모든 인증 유저 공유)
+    create table shared_data (
+      id text primary key default 'shared',
       payload jsonb,
       updated_at timestamptz default now()
     );
-    alter table user_data enable row level security;
-    create policy "본인 데이터만 접근" on user_data
-      for all using (auth.uid() = user_id);
+    -- profiles 테이블
+    create table profiles (
+      id uuid references auth.users(id) on delete cascade primary key,
+      nickname text,
+      is_admin boolean default false,
+      created_at timestamptz default now()
+    );
+    -- delete_logs 테이블
+    create table delete_logs (
+      id uuid default gen_random_uuid() primary key,
+      item_type text,
+      item_name text,
+      deleted_by text,
+      deleted_at timestamptz default now()
+    );
     ========================================================== */
 
     /* ===================== SUPABASE INIT & AUTH ===================== */
@@ -491,7 +543,7 @@
       } catch (e) {
         console.error('Logout error:', e);
       }
-      if(window.syncTimeout) clearTimeout(window.syncTimeout);
+      if (window.syncTimeout) clearTimeout(window.syncTimeout);
       window.location.reload();
     }
 
@@ -502,17 +554,17 @@
         console.error('[load] 에러: 유저 정보 없음', userError);
         throw new Error('User not found');
       }
-      
-      const { data: resData, error } = await sb.from('user_data').select('payload').eq('user_id', user.id).maybeSingle();
-      
+
+      const { data: resData, error } = await sb.from('shared_data').select('payload').eq('id', 'shared').maybeSingle();
+
       if (error) {
         console.error('[load] 에러: 테이블 조회 실패', error);
         if (error.code === '42P01') {
-          alert("Supabase에 'user_data' 테이블이 생성되지 않았습니다. SQL을 실행해주세요!");
+          alert("Supabase에 'shared_data' 테이블이 생성되지 않았습니다. SQL을 실행해주세요!");
         }
         throw error;
       }
-      
+
       if (resData && resData.payload) {
         data = resData.payload;
         if (!data.companies) {
@@ -525,6 +577,96 @@
         console.log('[load] 완료: 데이터가 없어 에러 throw 진행 (fallback 예정)');
         throw new Error('No data found');
       }
+    }
+
+    /* ===================== PROFILE ===================== */
+    async function loadCurrentProfile() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      currentUserEmail = user.email || '';
+      const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if (error) { console.error('프로필 로드 에러:', error); return; }
+      if (profile) {
+        currentUserProfile = { nickname: profile.nickname, is_admin: !!profile.is_admin };
+      } else {
+        await sb.from('profiles').insert({ id: user.id, nickname: null, is_admin: false });
+        currentUserProfile = { nickname: null, is_admin: false };
+      }
+    }
+
+    async function openUserManageModal() {
+      const { data: profiles, error } = await sb.from('profiles').select('id, nickname, is_admin');
+      if (error) { showToast('유저 목록 로드 실패'); return; }
+      // 유저 이메일을 가져오기 위해 auth.users는 직접 접근 불가하므로 id 기반 표시
+      const listHtml = profiles.map(p => {
+        const nick = p.nickname || '';
+        const adminChecked = p.is_admin ? 'checked' : '';
+        return `<div class="flex items-center gap-2 bg-dark-700 rounded-lg px-3 py-2 mb-2">
+          <div class="flex-1">
+            <div class="text-xs text-dark-400 truncate" title="${p.id}">${p.id.slice(0,8)}...</div>
+            <input type="text" value="${nick}" placeholder="닉네임 입력" data-profile-id="${p.id}" class="profile-nick-input bg-dark-600 border border-dark-500 rounded px-2 py-1 text-sm w-full mt-1">
+          </div>
+          <label class="flex items-center gap-1 text-xs whitespace-nowrap cursor-pointer">
+            <input type="checkbox" ${adminChecked} data-admin-id="${p.id}" class="profile-admin-cb accent-indigo-500">
+            관리자
+          </label>
+        </div>`;
+      }).join('');
+      document.getElementById('userManageList').innerHTML = listHtml || '<p class="text-sm text-dark-400 text-center py-4">등록된 유저가 없습니다.</p>';
+      openModal('modalUserManage');
+    }
+
+    async function saveAllProfiles() {
+      const nickInputs = document.querySelectorAll('.profile-nick-input');
+      const adminCbs = document.querySelectorAll('.profile-admin-cb');
+      const updates = [];
+      nickInputs.forEach(inp => {
+        const id = inp.dataset.profileId;
+        const nickname = inp.value.trim() || null;
+        const adminCb = document.querySelector(`.profile-admin-cb[data-admin-id="${id}"]`);
+        const is_admin = adminCb ? adminCb.checked : false;
+        updates.push({ id, nickname, is_admin });
+      });
+      for (const u of updates) {
+        await sb.from('profiles').upsert(u, { onConflict: 'id' });
+      }
+      // 현재 유저 프로필 다시 로드
+      await loadCurrentProfile();
+      updateHeaderUI();
+      closeModal('modalUserManage');
+      showToast('유저 프로필 저장 완료');
+    }
+
+    /* ===================== DELETE LOGS ===================== */
+    async function logDeletion(itemType, itemName) {
+      const deletedBy = getUserDisplayName();
+      await sb.from('delete_logs').insert({
+        item_type: itemType,
+        item_name: itemName,
+        deleted_by: deletedBy,
+        deleted_at: new Date().toISOString()
+      });
+    }
+
+    async function openDeleteLogsModal() {
+      const { data: logs, error } = await sb.from('delete_logs').select('*').order('deleted_at', { ascending: false }).limit(100);
+      if (error) { showToast('삭제 이력 로드 실패'); return; }
+      const listHtml = logs && logs.length ? logs.map(l => {
+        const dt = new Date(l.deleted_at);
+        const timeStr = dt.toLocaleString('ko-KR');
+        return `<div class="flex items-center justify-between bg-dark-700 rounded-lg px-3 py-2 mb-1.5">
+          <div>
+            <span class="text-xs bg-red-900/50 text-red-300 px-1.5 py-0.5 rounded mr-2">${l.item_type}</span>
+            <span class="text-sm font-medium">${l.item_name}</span>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-dark-300">${l.deleted_by}</div>
+            <div class="text-[10px] text-dark-400">${timeStr}</div>
+          </div>
+        </div>`;
+      }).join('') : '<p class="text-sm text-dark-400 text-center py-8">삭제 이력이 없습니다.</p>';
+      document.getElementById('deleteLogsList').innerHTML = listHtml;
+      openModal('modalDeleteLogs');
     }
     function initDefaultData() {
       data.categories = [...DEFAULT_CATEGORIES];
@@ -738,6 +880,50 @@
       <div class="flex items-center gap-2"><span class="text-sm w-28">USD 1$ =</span><input id="rateUsdCny" type="number" step="any" class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm" placeholder="7.3"><span class="text-sm text-dark-400">CNY</span></div>
     </div>
     <div class="flex gap-2 mt-4"><button onclick="saveExchangeRates()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button><button onclick="closeModal('modalExchangeRate')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button></div>
+  </div></div>
+
+  <div id="modalSearch" class="modal-overlay" onclick="if(event.target===this)closeModal('modalSearch')"><div class="modal-box wide">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">🔍 상세 검색</h3><button onclick="closeModal('modalSearch')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold flex items-center gap-2 text-dark-300 block mb-2">카테고리 <button onclick="searchToggleAllCat(true)" class="text-[10px] bg-dark-600 px-1 rounded hover:bg-dark-500">전체선택</button><button onclick="searchToggleAllCat(false)" class="text-[10px] bg-dark-600 px-1 rounded hover:bg-dark-500">해제</button></label>
+        <div id="searchCategories" class="flex flex-wrap gap-2 text-sm bg-dark-700/50 p-2.5 rounded-lg border border-dark-600"></div>
+      </div>
+      
+      <div>
+        <label class="text-sm font-semibold flex items-center gap-2 text-dark-300 block mb-2">회사 <span class="text-xs font-normal text-dark-400">(선택한 카테고리 내)</span> <button onclick="searchToggleAllComp(true)" class="text-[10px] bg-dark-600 px-1 rounded hover:bg-dark-500">전체선택</button><button onclick="searchToggleAllComp(false)" class="text-[10px] bg-dark-600 px-1 rounded hover:bg-dark-500">해제</button></label>
+        <div id="searchCompanies" class="flex flex-wrap gap-2 text-sm bg-dark-700/50 p-2.5 rounded-lg border border-dark-600 max-h-32 overflow-y-auto"></div>
+      </div>
+      
+      <div>
+        <label class="text-sm font-semibold flex items-center gap-2 text-dark-300 block mb-2">스펙 검색어 <span class="text-xs font-normal text-dark-400">(입력하지 않은 항목은 전체 포함)</span></label>
+        <div id="searchSpecs" class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm bg-dark-700/50 p-2.5 rounded-lg border border-dark-600 max-h-48 overflow-y-auto"></div>
+      </div>
+      
+      <button onclick="executeSearch()" class="btn-primary w-full py-2.5 rounded-lg font-medium shadow-md">검색 실행</button>
+    </div>
+
+    <div class="mt-6 border-t border-dark-600 pt-4">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-sm font-semibold">검색 결과 <span id="searchResultCount" class="text-accent-light ml-1 font-normal">(0)</span></h4>
+        <button onclick="exportSearchToExcel()" class="bg-green-600 hover:bg-green-500 text-white transition-colors text-xs px-3 py-1.5 rounded-lg font-medium hidden" id="searchExportBtn">엑셀로 내보내기</button>
+      </div>
+      <div id="searchResults" class="overflow-x-auto overflow-y-auto max-h-[300px] border border-dark-600 rounded-lg">
+        <p class="text-xs text-dark-400 text-center py-6">검색 조건을 설정하고 검색 실행을 클릭하세요.</p>
+      </div>
+    </div>
+  </div></div>
+
+  <div id="modalUserManage" class="modal-overlay" onclick="if(event.target===this)closeModal('modalUserManage')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">👥 유저 관리</h3><button onclick="closeModal('modalUserManage')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div id="userManageList" class="space-y-2 max-h-96 overflow-y-auto mb-4"></div>
+    <div class="flex gap-2"><button onclick="saveAllProfiles()" class="btn-primary flex-1 py-2 rounded-lg font-medium">저장</button><button onclick="closeModal('modalUserManage')" class="btn-secondary flex-1 py-2 rounded-lg font-medium">취소</button></div>
+  </div></div>
+
+  <div id="modalDeleteLogs" class="modal-overlay" onclick="if(event.target===this)closeModal('modalDeleteLogs')"><div class="modal-box">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">🗑️ 삭제 이력</h3><button onclick="closeModal('modalDeleteLogs')" class="text-dark-400 hover:text-white text-xl">&times;</button></div>
+    <div id="deleteLogsList" class="max-h-96 overflow-y-auto"></div>
   </div></div>`;
     }
     /* ===================== CATEGORY ===================== */
@@ -758,7 +944,7 @@
     function editCategory(old) { document.getElementById('editCatOldName').value = old; document.getElementById('editCatName').value = old; document.getElementById('catEditPreview').classList.add('hidden'); openModal('modalCatEdit') }
     function previewCatEdit() { const nw = document.getElementById('editCatName').value.trim(); const old = document.getElementById('editCatOldName').value; if (!nw) { showToast('카테고리명을 입력하세요'); return } const pv = document.getElementById('catEditPreview'); pv.classList.remove('hidden'); document.getElementById('catEditPreviewContent').innerHTML = `<p class="text-sm"><span class="text-dark-400">변경:</span> <span class="text-red-400 line-through">${old}</span> → <span class="text-green-400">${nw}</span></p>` }
     function saveCatEdit() { const old = document.getElementById('editCatOldName').value; const nw = document.getElementById('editCatName').value.trim(); if (!nw) { showToast('카테고리명을 입력하세요'); return } if (nw !== old && data.categories.includes(nw)) { showToast('이미 존재합니다'); return } const idx = data.categories.indexOf(old); if (idx >= 0) data.categories[idx] = nw; if (data.specs[old]) { data.specs[nw] = data.specs[old]; if (nw !== old) delete data.specs[old] } if (data.companies[old]) { data.companies[nw] = data.companies[old]; if (nw !== old) delete data.companies[old] } data.products.forEach(p => { if (p.category === old) p.category = nw }); if (currentCategory === old) currentCategory = nw; save(); closeModal('modalCatEdit'); renderCategoryManageList(); renderCategoryTabs(); renderCompanyTab(); showToast('카테고리 수정됨') }
-    function deleteCategory(name) { if (!confirm(`"${name}" 카테고리를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; data.categories = data.categories.filter(c => c !== name); delete data.specs[name]; delete data.companies[name]; data.products = data.products.filter(p => p.category !== name); delete data.quoteSelections[name]; if (currentCategory === name) currentCategory = data.categories[0] || ''; save(); renderCategoryManageList(); renderCategoryTabs(); renderCompanyTab(); renderQuoteBuilder(); showToast('카테고리 삭제됨') }
+    function deleteCategory(name) { if (!confirm(`"${name}" 카테고리를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; logDeletion('카테고리', name); data.categories = data.categories.filter(c => c !== name); delete data.specs[name]; delete data.companies[name]; data.products = data.products.filter(p => p.category !== name); delete data.quoteSelections[name]; if (currentCategory === name) currentCategory = data.categories[0] || ''; save(); renderCategoryManageList(); renderCategoryTabs(); renderCompanyTab(); renderQuoteBuilder(); showToast('카테고리 삭제됨') }
 
     /* ===================== SPEC ===================== */
     function renderSpecManageList() {
@@ -778,17 +964,17 @@
     function editCompany(id) { const c = getCompany(id); if (!c) return; document.getElementById('editCompId').value = id; document.getElementById('editCompName').value = c.name; document.getElementById('editCompCountry').value = c.country || ''; document.getElementById('editCompMemo').value = c.memo || ''; document.getElementById('compEditPreview').classList.add('hidden'); openModal('modalCompanyEdit') }
     function previewCompEdit() { const n = document.getElementById('editCompName').value.trim(); const c = document.getElementById('editCompCountry').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } const pv = document.getElementById('compEditPreview'); pv.classList.remove('hidden'); document.getElementById('compEditPreviewContent').innerHTML = `<p class="text-sm"><strong>${n}</strong> ${c ? `(${c})` : ''}</p>` }
     function saveCompanyEdit() { const id = document.getElementById('editCompId').value; const n = document.getElementById('editCompName').value.trim(); const c = document.getElementById('editCompCountry').value.trim(); const m = document.getElementById('editCompMemo').value.trim(); if (!n) { showToast('회사명을 입력하세요'); return } const comp = getCatCompanies(currentCategory).find(x => x.id === id) || getCompany(id); if (comp) { comp.name = n; comp.country = c; comp.memo = m } save(); closeModal('modalCompanyEdit'); renderCompanyManageList(); renderCompanyTab(); showToast('회사 수정됨') }
-    function deleteCompany(id) { const c = getCompany(id); if (!c || !confirm(`"${c.name}" 회사를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; data.companies[currentCategory] = (data.companies[currentCategory] || []).filter(x => x.id !== id); data.products = data.products.filter(p => p.companyId !== id); save(); if (selectedCompanyId === id) { selectedCompanyId = null; selectedProductId = null } renderCompanyManageList(); renderCompanyTab(); renderQuoteBuilder(); showToast('회사 삭제됨') }
+    function deleteCompany(id) { const c = getCompany(id); if (!c || !confirm(`"${c.name}" 회사를 삭제하시겠습니까?\n관련 제품도 삭제됩니다.`)) return; logDeletion('회사', c.name); data.companies[currentCategory] = (data.companies[currentCategory] || []).filter(x => x.id !== id); data.products = data.products.filter(p => p.companyId !== id); save(); if (selectedCompanyId === id) { selectedCompanyId = null; selectedProductId = null } renderCompanyManageList(); renderCompanyTab(); renderQuoteBuilder(); showToast('회사 삭제됨') }
 
     let companySpecDisplay = {};
     let companySpecPanelOpen = false;
-    function loadCompanySpecDisplay() { try { const r = localStorage.getItem('companySpecDisplay'); if(r) companySpecDisplay = JSON.parse(r); } catch(e){ companySpecDisplay = {}; } }
+    function loadCompanySpecDisplay() { try { const r = localStorage.getItem('companySpecDisplay'); if (r) companySpecDisplay = JSON.parse(r); } catch (e) { companySpecDisplay = {}; } }
     function saveCompanySpecDisplay() { localStorage.setItem('companySpecDisplay', JSON.stringify(companySpecDisplay)); }
-    function getCompanySpecsForCat(cat) { if(!companySpecDisplay[cat]) companySpecDisplay[cat] = []; return companySpecDisplay[cat]; }
+    function getCompanySpecsForCat(cat) { if (!companySpecDisplay[cat]) companySpecDisplay[cat] = []; return companySpecDisplay[cat]; }
     function toggleCompanySpecPanel() { companySpecPanelOpen = !companySpecPanelOpen; renderProductListForCompany(); }
     function toggleCompanySpec(cat, specName, checked) {
-      if(!companySpecDisplay[cat]) companySpecDisplay[cat] = [];
-      if(checked) { if(!companySpecDisplay[cat].includes(specName)) companySpecDisplay[cat].push(specName); }
+      if (!companySpecDisplay[cat]) companySpecDisplay[cat] = [];
+      if (checked) { if (!companySpecDisplay[cat].includes(specName)) companySpecDisplay[cat].push(specName); }
       else { companySpecDisplay[cat] = companySpecDisplay[cat].filter(s => s !== specName); }
       saveCompanySpecDisplay(); renderProductListForCompany();
     }
@@ -816,14 +1002,14 @@
       const empty = document.getElementById('emptyProductMsg');
       const panel = document.getElementById('companySpecPanel');
       const btn = document.getElementById('companySpecToggleBtn');
-      
-      if (!selectedCompanyId) { 
-        list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '회사를 선택하세요'; 
+
+      if (!selectedCompanyId) {
+        list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '회사를 선택하세요';
         if (panel) panel.classList.add('hidden');
         if (btn) btn.classList.add('hidden');
-        return; 
+        return;
       }
-      
+
       const comp = getCompany(selectedCompanyId);
       document.getElementById('productListTitle').textContent = (comp ? comp.name : '') + ' 제품';
 
@@ -854,7 +1040,7 @@
       const products = data.products.filter(p => p.companyId === selectedCompanyId && p.category === currentCategory);
       if (!products.length) { list.innerHTML = ''; empty.classList.remove('hidden'); empty.querySelector('p').textContent = '등록된 제품이 없습니다'; return }
       empty.classList.add('hidden');
-      
+
       const selectedSpecs = getCompanySpecsForCat(currentCategory);
 
       list.innerHTML = products.map(p => {
@@ -865,8 +1051,8 @@
           if (val) specParts.push(val);
         });
         const specHtml = specParts.length ? `<p class="text-[11px] text-dark-300 mt-1.5 leading-snug break-words">${specParts.join(' &middot; ')}</p>` : '';
-        
-        return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectProduct('${p.id}')"><div class="flex justify-between items-start"><div class="pr-2"><h3 class="font-medium text-sm">${p.name}</h3><p class="text-xs text-dark-400">${p.price ? formatPrice(p.price, p.currency) : '-'}</p>${specHtml}</div><div class="flex gap-1 shrink-0"><button onclick="event.stopPropagation();openProductModal('${p.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="event.stopPropagation();deleteProduct('${p.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div></div>`;
+
+        return `<div class="card ${isSel ? 'selected' : ''}" onclick="selectProduct('${p.id}')"><div class="flex justify-between items-start"><div class="pr-2"><h3 class="font-medium text-sm">${p.name}</h3><p class="text-xs text-dark-400">${p.price ? formatPrice(p.price, p.currency) : '-'}</p>${specHtml}${p.updated_by ? `<p class="text-[10px] text-dark-500 mt-1">✍ ${p.updated_by}</p>` : ''}</div><div class="flex gap-1 shrink-0"><button onclick="event.stopPropagation();openProductModal('${p.id}')" class="text-xs bg-dark-600 hover:bg-dark-500 px-2 py-1 rounded">수정</button><button onclick="event.stopPropagation();deleteProduct('${p.id}')" class="text-xs bg-red-900/50 hover:bg-red-800 text-red-300 px-2 py-1 rounded">삭제</button></div></div></div>`;
       }).join('');
     }
     function selectProduct(pid) { selectedProductId = pid; renderProductListForCompany(); renderProductDetail(); if (window.innerWidth < 1024) { const dp = document.getElementById('detailPanel'); dp.style.display = 'block'; dp.style.position = 'fixed'; dp.style.inset = '0'; dp.style.zIndex = '45'; dp.style.background = '#0f172a'; dp.style.overflowY = 'auto'; dp.style.padding = '16px' } }
@@ -892,6 +1078,10 @@
     </div></div>`;
       if (specs.length) { html += `<div class="bg-dark-700 rounded-lg p-4 mb-4"><h3 class="text-sm font-semibold text-dark-300 mb-2">📋 스펙</h3><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${specs.map(s => `<div class="text-sm"><span class="text-dark-400">${s.name}:</span><span class="font-medium ml-1">${(p.specValues && p.specValues[s.name]) || '-'}</span></div>`).join('')}</div></div>` }
       if (p.memo) { html += `<div class="text-sm text-dark-400 bg-dark-700 rounded-lg p-3 mb-4">💬 ${p.memo}</div>` }
+      if (p.updated_by) {
+        const updatedAt = p.updated_at ? new Date(p.updated_at).toLocaleString('ko-KR') : '';
+        html += `<div class="text-xs text-dark-500 bg-dark-700/50 rounded-lg p-3 mb-4 flex items-center gap-2">✍️ <span>마지막 수정: <span class="text-dark-300">${p.updated_by}</span></span>${updatedAt ? `<span class="text-dark-500">· ${updatedAt}</span>` : ''}</div>`;
+      }
       html += '</div>';
       detail.innerHTML = html;
     }
@@ -963,12 +1153,14 @@
       const d = gatherProductForm();
       if (!d.name) { showToast('제품명을 입력하세요'); return }
       if (!d.companyId) { showToast('회사를 선택하세요'); return }
+      d.updated_by = getUserDisplayName();
+      d.updated_at = new Date().toISOString();
       if (editId) { const p = data.products.find(x => x.id === editId); if (p) Object.assign(p, d) }
       else { data.products.push({ id: uid(), ...d }) }
       save(); closeModal('modalProduct'); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder();
       showToast(editId ? '제품 수정됨' : '제품 추가됨');
     }
-    function deleteProduct(pid) { const p = data.products.find(x => x.id === pid); if (!p || !confirm(`"${p.name}" 삭제?`)) return; data.products = data.products.filter(x => x.id !== pid); if (selectedProductId === pid) selectedProductId = null; save(); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder(); showToast('제품 삭제됨') }
+    function deleteProduct(pid) { const p = data.products.find(x => x.id === pid); if (!p || !confirm(`"${p.name}" 삭제?`)) return; logDeletion('제품', p.name); data.products = data.products.filter(x => x.id !== pid); if (selectedProductId === pid) selectedProductId = null; save(); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder(); showToast('제품 삭제됨') }
 
     /* ===================== SUB TABS ===================== */
     function switchSubTab(tab) {
@@ -983,7 +1175,7 @@
     let compareSpecDisplay = {};
     let compareSpecPanelOpen = false;
     let compareSelected = {};
-    
+
     function loadCompareSpecDisplay() {
       try { const raw = localStorage.getItem('compareSpecDisplay'); if (raw) compareSpecDisplay = JSON.parse(raw) } catch (e) { compareSpecDisplay = {} }
     }
@@ -1061,7 +1253,7 @@
       const comps = getCatCompanies(currentCategory);
       const cbx = document.getElementById('compareCheckboxes');
       if (!comps.length) { cbx.innerHTML = '<p class="text-sm text-dark-400">등록된 회사가 없습니다</p>'; document.getElementById('compareTableWrap').innerHTML = ''; return }
-      
+
       cbx.innerHTML = comps.map(c => {
         const prods = data.products.filter(p => p.companyId === c.id && p.category === currentCategory);
         const selId = compareSelected[c.id] || '';
@@ -1620,7 +1812,7 @@
     function toggleCategoryGroup(catId, checked) {
       document.querySelectorAll(`.comp-export-cb[data-catid="${catId}"]`).forEach(cb => cb.checked = checked);
     }
-    
+
     function updateCatGroupStatus(catId) {
       const cbs = document.querySelectorAll(`.comp-export-cb[data-catid="${catId}"]`);
       const groupCb = document.querySelector(`.cat-group-cb[data-catid="${catId}"]`);
@@ -1681,7 +1873,7 @@
         compId: cb.value,
         cat: cb.getAttribute('data-cat')
       }));
-      
+
       if (selectedComps.length === 0) {
         showToast('내보낼 회사를 선택하세요');
         return;
@@ -1692,19 +1884,19 @@
         const prods = data.products.filter(p => p.category === sc.cat && p.companyId === sc.compId);
         exportProducts.push(...prods);
       });
-      
+
       if (exportProducts.length === 0) {
-          showToast('선택한 회사의 제품이 없습니다');
-          return;
+        showToast('선택한 회사의 제품이 없습니다');
+        return;
       }
 
       const uniqueSpecs = new Set();
       selectedComps.forEach(sc => {
-         const specs = data.specs[sc.cat] || [];
-         specs.forEach(s => uniqueSpecs.add(s.name));
+        const specs = data.specs[sc.cat] || [];
+        specs.forEach(s => uniqueSpecs.add(s.name));
       });
       const specArray = Array.from(uniqueSpecs);
-      
+
       const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임', ...specArray];
       const rows = [headers];
 
@@ -1728,13 +1920,295 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = headers.map(() => ({ wch: 16 }));
-      
+
       XLSX.utils.book_append_sheet(wb, ws, '제품목록');
 
       const fileName = `제품내보내기_${new Date().toISOString().slice(0, 10)}.xlsx`;
       XLSX.writeFile(wb, fileName);
       closeModal('modalCategoryExport');
       showToast('데이터 내보내기 완료');
+    }
+
+    /* ===================== SEARCH ===================== */
+    let searchSelectedCategories = [];
+    let searchSelectedCompanies = [];
+    let searchResultProducts = [];
+
+    function openSearchModal() {
+      searchSelectedCategories = [];
+      searchSelectedCompanies = [];
+      searchResultProducts = [];
+      document.getElementById('searchResultCount').textContent = '(0)';
+      document.getElementById('searchResults').innerHTML = '<p class="text-xs text-dark-400 text-center py-6">검색 조건을 설정하고 검색 실행을 클릭하세요.</p>';
+      document.getElementById('searchExportBtn').classList.add('hidden');
+
+      renderSearchCategories();
+      renderSearchCompanies();
+      renderSearchSpecs();
+      openModal('modalSearch');
+    }
+
+    function renderSearchCategories() {
+      const container = document.getElementById('searchCategories');
+      if (!data.categories.length) {
+        container.innerHTML = '<span class="text-dark-400 text-xs">등록된 카테고리가 없습니다.</span>';
+        return;
+      }
+      container.innerHTML = data.categories.map(cat => {
+        const isChecked = searchSelectedCategories.includes(cat);
+        return `<label class="flex items-center gap-1.5 cursor-pointer hover:bg-dark-600 px-2 py-1 rounded transition-colors bg-dark-600/50">
+          <input type="checkbox" value="${escQ(cat)}" ${isChecked ? 'checked' : ''} class="accent-indigo-500 w-4 h-4" onchange="onSearchCategoryChange('${escQ(cat)}', this.checked)">
+          <span>${cat}</span>
+        </label>`;
+      }).join('');
+    }
+
+    function searchToggleAllCat(check) {
+      searchSelectedCategories = check ? [...data.categories] : [];
+      renderSearchCategories();
+      renderSearchCompanies();
+      renderSearchSpecs();
+    }
+
+    function searchToggleAllComp(check) {
+      if (check) {
+        searchSelectedCompanies = [];
+        searchSelectedCategories.forEach(cat => {
+          const comps = getCatCompanies(cat);
+          comps.forEach(c => { if (!searchSelectedCompanies.includes(c.id)) searchSelectedCompanies.push(c.id); });
+        });
+      } else {
+        searchSelectedCompanies = [];
+      }
+      renderSearchCompanies();
+    }
+
+    function onSearchCategoryChange(cat, checked) {
+      if (checked) {
+        if (!searchSelectedCategories.includes(cat)) searchSelectedCategories.push(cat);
+      } else {
+        searchSelectedCategories = searchSelectedCategories.filter(c => c !== cat);
+        const compIdsToRemove = getCatCompanies(cat).map(c => c.id);
+        searchSelectedCompanies = searchSelectedCompanies.filter(cid => !compIdsToRemove.includes(cid));
+      }
+      renderSearchCompanies();
+      renderSearchSpecs();
+    }
+
+    function renderSearchCompanies() {
+      const container = document.getElementById('searchCompanies');
+      if (!searchSelectedCategories.length) {
+        container.innerHTML = '<span class="text-dark-400 text-xs text-center block w-full">카테고리를 먼저 선택하세요.</span>';
+        return;
+      }
+
+      let allComps = [];
+      searchSelectedCategories.forEach(cat => {
+        const comps = getCatCompanies(cat);
+        comps.forEach(c => {
+          if (!allComps.find(x => x.id === c.id)) {
+            allComps.push({ ...c, _cat: cat });
+          }
+        });
+      });
+
+      if (!allComps.length) {
+        container.innerHTML = '<span class="text-dark-400 text-xs text-center block w-full">선택한 카테고리에 회사가 없습니다.</span>';
+        return;
+      }
+
+      container.innerHTML = allComps.map(c => {
+        const isChecked = searchSelectedCompanies.includes(c.id);
+        return `<label class="flex items-center gap-1.5 cursor-pointer hover:bg-dark-600 px-2 py-1 rounded transition-colors bg-dark-600/50">
+          <input type="checkbox" value="${c.id}" ${isChecked ? 'checked' : ''} class="accent-indigo-500 w-4 h-4" onchange="onSearchCompanyChange('${c.id}', this.checked)">
+          <span class="truncate max-w-[120px]" title="${c.name}">${c.name}</span>
+          <span class="text-[10px] text-dark-400 shrink-0">(${c._cat})</span>
+        </label>`;
+      }).join('');
+    }
+
+    function onSearchCompanyChange(compId, checked) {
+      if (checked) {
+        if (!searchSelectedCompanies.includes(compId)) searchSelectedCompanies.push(compId);
+      } else {
+        searchSelectedCompanies = searchSelectedCompanies.filter(id => id !== compId);
+      }
+    }
+
+    function renderSearchSpecs() {
+      const container = document.getElementById('searchSpecs');
+      if (!searchSelectedCategories.length) {
+        container.innerHTML = '<div class="col-span-full text-center text-dark-400 text-xs py-2">카테고리를 선택하면 스펙 항목이 표시됩니다.</div>';
+        return;
+      }
+
+      let specSet = new Set();
+      searchSelectedCategories.forEach(cat => {
+        const specs = data.specs[cat] || [];
+        specs.forEach(s => {
+          specSet.add(s.name);
+        });
+      });
+
+      const allSpecNames = Array.from(specSet);
+      if (!allSpecNames.length) {
+        container.innerHTML = '<div class="col-span-full text-center text-dark-400 text-xs py-2">선택한 카테고리에 스펙 항목이 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = allSpecNames.map(sn => {
+        return `<div>
+          <label class="text-xs text-dark-300 block mb-1 truncate" title="${sn}">${sn}</label>
+          <input type="text" data-search-spec="${sn}" class="w-full bg-dark-800 border border-dark-500 rounded px-2 py-1.5 text-xs text-dark-100 placeholder-dark-500" placeholder="포함할 검색어 입력">
+        </div>`;
+      }).join('');
+    }
+
+    function executeSearch() {
+      if (!searchSelectedCategories.length) {
+        showToast('최소 한 개의 카테고리를 선택하세요.');
+        return;
+      }
+
+      const specFilters = {};
+      let hasAnySpecFilter = false;
+      document.querySelectorAll('input[data-search-spec]').forEach(input => {
+        const val = input.value.trim().toLowerCase();
+        if (val) {
+          specFilters[input.dataset.searchSpec] = val;
+          hasAnySpecFilter = true;
+        }
+      });
+
+      searchResultProducts = data.products.filter(p => {
+        if (!searchSelectedCategories.includes(p.category)) return false;
+        if (!searchSelectedCompanies.includes(p.companyId)) return false;
+
+        // Spec checks - Must partially match ALL provided spec inputs for this product
+        let specMatch = true;
+        for (const [sn, filterText] of Object.entries(specFilters)) {
+          const prodVal = p.specValues && p.specValues[sn] ? String(p.specValues[sn]).toLowerCase() : '';
+          if (!prodVal.includes(filterText)) {
+            specMatch = false;
+            break;
+          }
+        }
+
+        return specMatch;
+      });
+
+      renderSearchResults();
+    }
+
+    function renderSearchResults() {
+      const container = document.getElementById('searchResults');
+      const counter = document.getElementById('searchResultCount');
+      const exportBtn = document.getElementById('searchExportBtn');
+
+      counter.textContent = `(${searchResultProducts.length})`;
+
+      if (!searchResultProducts.length) {
+        container.innerHTML = '<p class="text-xs text-dark-400 text-center py-6">조건에 맞는 검색 결과가 없습니다. (회사 선택 여부도 확인해주세요)</p>';
+        exportBtn.classList.add('hidden');
+        return;
+      }
+
+      exportBtn.classList.remove('hidden');
+
+      const resultSpecSet = new Set();
+      searchResultProducts.forEach(p => {
+        if (p.specValues) {
+          Object.keys(p.specValues).forEach(k => resultSpecSet.add(k));
+        }
+      });
+      const specColumns = Array.from(resultSpecSet);
+
+      let html = `<table class="preview-table text-xs whitespace-nowrap min-w-full">
+        <thead class="sticky top-0 z-10 bg-dark-600">
+          <tr>
+            <th class="w-8 text-center p-1"><input type="checkbox" checked onchange="toggleAllSearchResults(this.checked)" class="accent-indigo-500 w-3 h-3"></th>
+            <th>카테고리</th>
+            <th>회사명</th>
+            <th>제품명</th>
+            <th>가격</th>
+            <th>단위</th>
+            <th>리드타임</th>
+            ${specColumns.map(s => `<th>${s}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
+      searchResultProducts.forEach((p, idx) => {
+        const comp = getCompany(p.companyId);
+        html += `
+          <tr class="hover:bg-dark-600/30">
+            <td class="text-center p-1"><input type="checkbox" checked value="${p.id}" class="search-result-cb accent-indigo-500 w-3 h-3"></td>
+            <td>${p.category}</td>
+            <td class="truncate max-w-[100px]" title="${comp ? comp.name : '-'}">${comp ? comp.name : '-'}</td>
+            <td class="font-medium text-dark-100 truncate max-w-[150px]" title="${p.name}">${p.name}</td>
+            <td>${p.price ? p.price + ' ' + (p.currency || '') : '-'}</td>
+            <td>${p.unit || '-'}</td>
+            <td>${p.leadTime || '-'}</td>
+            ${specColumns.map(s => {
+          const v = (p.specValues && p.specValues[s]) || '';
+          return `<td class="max-w-[150px] truncate" title="${v}">${v || '-'}</td>`;
+        }).join('')}
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function toggleAllSearchResults(checked) {
+      document.querySelectorAll('.search-result-cb').forEach(cb => cb.checked = checked);
+    }
+
+    function exportSearchToExcel() {
+      const checkedBoxes = Array.from(document.querySelectorAll('.search-result-cb:checked'));
+      if (!checkedBoxes.length) {
+        showToast('내보낼 제품을 하나 이상 선택하세요.');
+        return;
+      }
+
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      const itemsToExport = searchResultProducts.filter(p => selectedIds.includes(p.id));
+
+      const specSet = new Set();
+      itemsToExport.forEach(p => {
+        if (p.specValues) Object.keys(p.specValues).forEach(k => specSet.add(k));
+      });
+      const specArray = Array.from(specSet);
+
+      const headers = ['카테고리', '회사명', '제품명', '가격', '통화(USD/KRW/CNY)', '단위', '리드타임', ...specArray];
+      const rows = [headers];
+
+      itemsToExport.forEach(p => {
+        const comp = getCompany(p.companyId);
+        const row = [
+          p.category,
+          comp ? comp.name : '',
+          p.name,
+          p.price === 0 || p.price ? p.price : '',
+          p.currency || '',
+          p.unit || '',
+          p.leadTime || ''
+        ];
+        specArray.forEach(sn => {
+          row.push((p.specValues && p.specValues[sn]) || '');
+        });
+        rows.push(row);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = headers.map(() => ({ wch: 16 }));
+
+      XLSX.utils.book_append_sheet(wb, ws, '검색결과');
+      const fileName = `검색다운로드_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      showToast('검색 결과 엑셀 다운로드 완료');
     }
 
     /* ===================== JSON EXPORT/IMPORT ===================== */
@@ -1770,8 +2244,21 @@
     function renderAll() {
       renderCategoryTabs(); switchSubTab(currentSubTab); renderCompanyTab(); renderCompareTab(); renderQuoteBuilder();
     }
-    
+
     let _appLoaded = false;
+
+    function updateHeaderUI() {
+      const displayName = getUserDisplayName();
+      document.getElementById('headerUsername').textContent = displayName;
+      document.getElementById('headerUsername').classList.remove('hidden');
+      // 어드민 버튼 표시/숨김
+      const isAdmin = currentUserProfile.is_admin;
+      document.getElementById('btnUserManage').classList.toggle('hidden', !isAdmin);
+      document.getElementById('btnDeleteLogs').classList.toggle('hidden', !isAdmin);
+      const divider = document.getElementById('adminDivider');
+      if (divider) divider.style.display = isAdmin ? '' : 'none';
+    }
+
     async function initAuth() {
       const safeLoadAndInitialize = async () => {
         try {
@@ -1781,8 +2268,10 @@
           initDefaultData();
           save();
         }
+        await loadCurrentProfile();
         initModals(); loadQuoteSpecDisplay(); loadCompareSpecDisplay(); loadCompanySpecDisplay(); loadExchangeRates();
         currentCategory = data.categories[0] || '';
+        updateHeaderUI();
         renderAll();
         _appLoaded = true;
       };
@@ -1793,6 +2282,7 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appWrapper').style.display = 'block';
         if (session.user && session.user.email) {
+          currentUserEmail = session.user.email;
           document.getElementById('headerUsername').textContent = session.user.email.split('@')[0];
           document.getElementById('headerUsername').classList.remove('hidden');
         }
@@ -1811,6 +2301,7 @@
           document.getElementById('loginScreen').style.display = 'none';
           document.getElementById('appWrapper').style.display = 'block';
           if (session && session.user && session.user.email) {
+            currentUserEmail = session.user.email;
             document.getElementById('headerUsername').textContent = session.user.email.split('@')[0];
             document.getElementById('headerUsername').classList.remove('hidden');
           }
@@ -1821,9 +2312,13 @@
           document.getElementById('loginScreen').style.display = 'flex';
           document.getElementById('appWrapper').style.display = 'none';
           document.getElementById('headerUsername').classList.add('hidden');
+          document.getElementById('btnUserManage').classList.add('hidden');
+          document.getElementById('btnDeleteLogs').classList.add('hidden');
           _appLoaded = false;
+          currentUserProfile = { nickname: null, is_admin: false };
+          currentUserEmail = '';
           data = { categories: [], specs: {}, companies: {}, products: [], quoteSelections: {} };
-          if(window.syncTimeout) clearTimeout(window.syncTimeout);
+          if (window.syncTimeout) clearTimeout(window.syncTimeout);
         }
       });
     }
